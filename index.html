@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>songlh的博客</title>
+  <title>songlh&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="程序员一枚">
+  <meta name="description" content="代码搬运工">
 <meta property="og:type" content="website">
-<meta property="og:title" content="songlh的博客">
+<meta property="og:title" content="songlh&#39;s blog">
 <meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="songlh的博客">
-<meta property="og:description" content="程序员一枚">
+<meta property="og:site_name" content="songlh&#39;s blog">
+<meta property="og:description" content="代码搬运工">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="songlh">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternative" href="/atom.xml" title="songlh的博客" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="songlh&#39;s blog" type="application/atom+xml">
   
   
     <link rel="icon" href="/favicon.png">
@@ -181,70 +181,9 @@
 <p>MiniGUI-Threads为GB2312输入法定义了一个入口函数：</p>
 <p><code>HWND GBIMEWindow (HWND hosting);</code></p>
 <p>​	该函数创建一个可以拖动的GB2312输入法窗口。</p>
-<p>除了上述提供GB2312输入法的函数之外，MiniGUI提供了如下更加通用的输入法接口：</p>
-<p><code>int GUIAPI RegisterIMEWindow (HWND hWnd);</code></p>
-<p>​	该函数把指定的窗口hWnd注册为MiniGUI的IME窗口。此后，键盘输入将首先被发送到IME窗口。注意只能注册一个IME窗口。</p>
-<p><code>int GUIAPI UnregisterIMEWindow (HWND hWnd); </code></p>
-<p>​	该函数注销一个IME窗口。</p>
-<p><code>int GUIAPI SetIMEStatus (int StatusCode, int Value);</code></p>
-<p>​	该函数设置当前的IME窗口状态。</p>
-<p>对GB2312输入法，StatusCode可以是以下值之一：</p>
-<ul>
-<li><p>IS_ENABLE		使IME窗口有效或无效</p>
-</li>
-<li><p>IS_FULLCHAR   是否转换半角字符为全角字符</p>
-</li>
-<li><p>IS_FULLPUNC   是否转换半角标点为全角标点</p>
-</li>
-<li><p>IS_METHOD      输入法的种类、比如内码、全拼、五笔等等。</p>
-<p>Value为所设的状态值。</p>
-</li>
-</ul>
-<p><code>int GUIAPI GetIMEStatus (int StatusCode);</code></p>
-<p>​	该函数获取当前IME窗口的状态。StatusCode指定所要获取的内容，函数返回IME窗口状态值。</p>
-<p>为了实现desktop（消息分发和处理的主桌面窗口）和IME（输入法）窗口之间的交互，MiniGUI为输入法窗口定义了以下7个主要消息接口，当活动窗口发生变化时，MiniGUI会向IME窗口发送这些消息，实现IME的隐藏、显示和目标输出窗口句柄的更换：</p>
-<ul>
-<li><p>MSG_IME_REGISTER：向MiniGUI注册当前输入法窗口句柄；</p>
-</li>
-<li><p>MSG_IME_UNREGISTER：向MiniGUI注销当前输入法窗口句柄；</p>
-</li>
-<li><p>MSG_IME_SETTARGET：发送该消息设置输入法的目标活动窗口；</p>
-</li>
-<li><p>MSG_IME_OPEN：发送该消息告诉输入法窗口，当前活动窗口有WS_EX_IMECOMPOSE扩展风格的窗口，所以应该显示输入法窗口；</p>
-</li>
-<li><p>MSG_IME_GETTARGET：发送该消息获得当前输入法的目标活动窗口句柄；</p>
-</li>
-<li><p>MSG_IME_CLOSE：发送该消息告诉输入法窗口，当前活动窗口无WS_EX_IMECOMPOSE扩展风格，所以应该隐藏输入法窗口；</p>
-</li>
-<li><p>MSG_IME_GETSTATUS：获取当前IME窗口状态（软键盘窗口打开还是关闭的状态）。</p>
-<p>在MiniGUI的API接口中注册IME窗口句柄的函数是<code>RegisterIMEWindow</code>，它发送了IME注册的消息<code>MSG_IME_REGISTER</code>；注销IME窗口的句柄的函数是<code>UnregisterIMEWindow</code>，它发送了IME注销的消息<code>MSG_IME_UNREGISTER</code>；启动显示IME窗口的函数是<code>GBIMEWindowEx</code>，它封装了打开IME窗口的消息<code>MSG_IME_OPEN</code>和关闭IME窗口的消息<code>MSG_IME_CLOSE</code>。其它消息都在MiniGUI内部桌面消息处理中使用。</p>
-</li>
-</ul>
-<h3 id="MiniGUI原输入法消息处理流程分析"><a href="#MiniGUI原输入法消息处理流程分析" class="headerlink" title="MiniGUI原输入法消息处理流程分析"></a>MiniGUI原输入法消息处理流程分析</h3><p>在MiniGUI原输入法处理流程中，如果一个窗口要成为输入法窗口，则必须完成如下4个处理任务：</p>
-<ul>
-<li><p>注册成为当前输入法</p>
-</li>
-<li><p>处理MSG_IME_SETTARGE消息，并记录当前活动目标窗口</p>
-</li>
-<li><p>拦截MSG_CHAR消息实现特定输入法转换，并将转换结果通过MSG_CHAR消息发送到当前活动的目标窗口</p>
-</li>
-<li><p>处理输入法打开消息MSG_IME_OPEN和输入法关闭消息MSG_IME_CLOSE，再切换到需要输入法的活动窗口时自动显示输入法窗口。该主窗口将在启动之后，首先将自己注册为输入法窗口（*__mg_ime_wnd*）。这样，MiniGUI的desktop就知道首先要将按键信息发送到这个主窗口之中，而不是当前的活动主窗口。当活动主窗口发生变化时，desktop会通知输入法窗口当前的活动窗口的句柄。这样，当输入法窗口接收到按键消息并且翻译为适当的字符之后，就可以将其发送到当前的活动窗口。</p>
-<img src="D:\blog\source\img\SJSJ201106026_03800.jpg" alt="MiniGUI原输入法消息处理流程" style="zoom: 67%;" />
-
-<h4 id="输入法模块与编辑控件间关键消息处理"><a href="#输入法模块与编辑控件间关键消息处理" class="headerlink" title="输入法模块与编辑控件间关键消息处理"></a>输入法模块与编辑控件间关键消息处理</h4><p>增加几个消息需要在sledit控件的消息处理回调函数中使用，因为sledit这个控件是所有字符输入的基础控件。在sledit控件的鼠标左键按下MSG_LBUTTONDOWN和MSG_SETFOCUS控件聚焦两个消息的处理部分，将该控件的HWND句柄和起始坐标发送到主IME窗口，其实现代码如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_SETFOCUS:</span><br><span class="line">  &#123;</span><br><span class="line">	RECT rcClt = GetClientRect(hWnd, &amp;rcClt);<span class="comment">//客户区</span></span><br><span class="line">      WORD nImeLeft = rcClt.left;<span class="comment">//客户区左坐标</span></span><br><span class="line">      WORD nImeBottom = rcClt.top;<span class="comment">//客户区下坐标</span></span><br><span class="line">      ClientToScreen(hWnd, (<span class="type">int</span> *)&amp;nImeLeft, (<span class="type">int</span> *)&amp;nImeBottom);<span class="comment">//将客户区坐标转换成屏幕坐标</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETTARGET,(WPARAM)hWnd, <span class="number">0</span>);<span class="comment">//通知IME活动HWND句柄</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETSUBPOS, MAKELONG(nImeLeft, nImeBottom), <span class="number">0</span>);</span><br><span class="line">      ......(实现控件聚焦绘制);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<p>在sledit的MSG_LBUTTONDOWN中需要判断IME窗口是关闭还是打开，然后执行反操作，使得sledit可以支持鼠标单键软键盘操作，其主要实现如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_LBUTTONDOWN:</span><br><span class="line">  &#123;</span><br><span class="line">    BOOL ImeState;</span><br><span class="line">      ImeState = (BOOL)SendMessage(__mg_ime_wnd, MSG_IME_GETSTATUS, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//获取当前IME状态</span></span><br><span class="line">      <span class="keyword">if</span>(ImeState) &#123; <span class="comment">//如果IME已经打开</span></span><br><span class="line">          SendMessage(__mg_ime_wnd, MSG_IME_CLOSE, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//关闭当前IME窗口</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          ......(通知IME窗口坐标和HWND句柄);</span><br><span class="line">          SendMessage(__mg_ime_wnd, MSG_IME_OPEN, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<p>同理在sledit的MSG_KILLFOCUS（失去焦点）消息处理中发送MSG_IME_SETTARGET消息，通知IME窗口当前活动窗口句柄为空，并关闭输入法。其代码实现如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_KILLFOCUS:</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">//关闭当前IME窗口</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_CLOSE, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETTARGET, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//复位IME的当前目标输入窗口句柄</span></span><br><span class="line">      ......(实现控件失去焦点绘制);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<p>主IME窗口在收到MSG_IME_SETTARGET后从wParam中获得活动窗口的HWND句柄，采用<code>DWORD dwStyle = GetWindowStyle(wParam);</code>获取该窗口句柄的类型，然后逐一判断该dwStyle类型是否支持各子输入法，将支持的子输入法类型记录到当前活动窗口输入法类型数组，以备在GUI需要切换子输入法时使用。</p>
-<p>当创建某个支持输入法的控件时，必须把控件类型风格参数用与操作累加起来，例如一个普通编辑框的类型参数为：<code>WS_CHILD | WS_VISIBLE | INPUT_NUMBER</code>表明该输入控件仅仅支持数字型输入，其它不支持。如下是输入法类型宏定义：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> INPUT_NUMBER	0x000010L	<span class="comment">//数字型</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_UPPERCASE	0x000020L	<span class="comment">//大写</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INPUT_LOWERCASE	0x000040L	<span class="comment">//小写</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_SYMBOL	0x000080L	<span class="comment">//特殊字符</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_CHINESE	0x000100L	<span class="comment">//拼音</span></span></span><br></pre></td></tr></table></figure></li>
-</ul>
-
+        
+          <a class="article-more-a" href="/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/#more">more >></a>
+        
       
 
       
@@ -321,7 +260,7 @@
 <p>下面完成对USB设备的移植，其中包括U盘，USB鼠标键盘。在Linux内核中，已经支持U盘，USB鼠标键盘了，这里只需要进行对应的配置，然后就可以完成对他们的支持</p>
 </blockquote>
 <p>在Linux内核根目录输入<code>$ make menuconfig</code>，然后就进入了配置单，配置如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">	SCSI device support ---&gt;</span><br><span class="line">		&lt;*&gt; SCSI device support</span><br><span class="line">		[*] legacy/proc/scsi/support</span><br><span class="line">		&lt;*&gt; SCSI disk support</span><br><span class="line">		&lt;*&gt; SCSI CDROM support</span><br><span class="line">	[*] HID Devices ---&gt;</span><br><span class="line">		&lt;*&gt; USB Human Interface Device (full HID) support</span><br><span class="line">		[*] /dev/hiddev raw HID device support</span><br><span class="line">	[*] USB support ---&gt;</span><br><span class="line">		&lt;*&gt; Support for Host-side USB</span><br><span class="line">		[*] USB device filesystem</span><br><span class="line">		[*] USB device class-devices(DEPRECATED)</span><br><span class="line">		&lt;*&gt; OHCI HCD support</span><br><span class="line">		&lt;*&gt;	USB Mass Storage support</span><br></pre></td></tr></table></figure>
+<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">	SCSI device support ---&gt;</span><br><span class="line">		&lt;*&gt; SCSI device support</span><br><span class="line">		[*] legacy/<span class="keyword">proc</span>/scsi/support</span><br><span class="line">		&lt;*&gt;<span class="title"> SCSI</span> disk<span class="title"> support</span></span><br><span class="line">		&lt;*&gt;<span class="title"> SCSI</span> CDROM<span class="title"> support</span></span><br><span class="line">	[*]<span class="title"> HID</span> Devices ---&gt;</span><br><span class="line">		&lt;*&gt;<span class="title"> USB</span> Human<span class="title"> Interface</span> Device (full<span class="title"> HID)</span> support</span><br><span class="line">		[*] /dev/hiddev<span class="title"> raw</span> HID<span class="title"> device</span> support</span><br><span class="line">	[*]<span class="title"> USB</span> support ---&gt;</span><br><span class="line">		&lt;*&gt;<span class="title"> Support</span> for<span class="title"> Host-side</span> USB</span><br><span class="line">		[*]<span class="title"> USB</span> device<span class="title"> filesystem</span></span><br><span class="line">		[*]<span class="title"> USB</span> device<span class="title"> class-devices(DEPRECATED)</span></span><br><span class="line">		&lt;*&gt;<span class="title"> OHCI</span> HCD<span class="title"> support</span></span><br><span class="line">		&lt;*&gt;<span class="title">	USB</span> Mass<span class="title"> Storage</span> support</span><br></pre></td></tr></table></figure>
 
 
       
