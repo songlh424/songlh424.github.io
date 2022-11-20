@@ -6,16 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>songlh&#39;s blog</title>
+  <title>进程管理 | songlh&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="代码搬运工">
-<meta property="og:type" content="website">
-<meta property="og:title" content="songlh&#39;s blog">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="进程 进程就是处于执行期的程序，但进程不仅仅局限于一段可执行程序代码。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及多个执行线程，还包括用来存放全局变量的数据段等。 执行线程，简称线程，是在进程中活动的对象。每个线程都拥有一个独立的程序计数器、进程栈和一组进程寄存器。内核调度的对象是线程，而不是进程。  ​	在现代操作系统中，进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程管理">
+<meta property="og:url" content="http://example.com/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/index.html">
 <meta property="og:site_name" content="songlh&#39;s blog">
-<meta property="og:description" content="代码搬运工">
+<meta property="og:description" content="进程 进程就是处于执行期的程序，但进程不仅仅局限于一段可执行程序代码。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及多个执行线程，还包括用来存放全局变量的数据段等。 执行线程，简称线程，是在进程中活动的对象。每个线程都拥有一个独立的程序计数器、进程栈和一组进程寄存器。内核调度的对象是线程，而不是进程。  ​	在现代操作系统中，进">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-11-18T16:41:16.000Z">
+<meta property="article:modified_time" content="2022-11-20T13:17:29.654Z">
 <meta property="article:author" content="songlh">
+<meta property="article:tag" content="Linux">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="songlh&#39;s blog" type="application/atom+xml">
@@ -152,16 +155,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-进程管理" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-进程管理" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">进程管理</a>
+    <h1 class="article-title" itemprop="name">
+      进程管理
     </h1>
   
 
@@ -181,10 +182,113 @@
 <p>​	在现代操作系统中，进程提供两种虚拟机制：<strong>虚拟处理器</strong>和<strong>虚拟内存</strong>。虽然实际上可能是许多进程正在分享一个处理器，但虚拟处理器给进程一种假象，让这些进程觉得自己在独享处理器。而虚拟内存让进程在分配和管理内存时觉得自己拥有整个系统的所有内存资源。</p>
 <p>​	<strong>注意：</strong>在线程之间可以共享虚拟内存，但每个都拥有各自的虚拟处理器。</p>
 <h3 id="进程描述符及任务结构"><a href="#进程描述符及任务结构" class="headerlink" title="进程描述符及任务结构"></a>进程描述符及任务结构</h3><p>​	内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中类型为 <code>task_struct</code>, 称为<strong>进程描述符</strong>的结构，该结构定义在<code>&lt;linux/sched.h&gt;</code>文件中。进程描述符中包含一个具体进程的所有信息 。</p>
-<h4 id="分配进程描述符"><a href="#分配进程描述符" class="headerlink" title="分配进程描述符"></a>分配进程描述符</h4>
-        
-          <a class="article-more-a" href="/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/#more">more >></a>
-        
+<h4 id="分配进程描述符"><a href="#分配进程描述符" class="headerlink" title="分配进程描述符"></a>分配进程描述符</h4><span id="more"></span>
+
+<p>​	Linux通过slab分配器分配task_struct结构，这样能达到&#x3D;&#x3D;对象复用&#x3D;&#x3D; 和&#x3D;&#x3D;缓存着色&#x3D;&#x3D; 的目的。在2.6以前的内核中，各个进程的task_struct存放在它们内核栈的尾端，这样做是为了像x86那样寄存器较少的硬件体系结构只要通过栈指针就能计算出它的位置，而无需额外的寄存器专门记录。现在用 slab 分配器动态生成task_struct，因此只需在栈底（对向下增长的栈）或栈顶（对向上增长的栈）创建一个新的结构<code>struct thread_info</code> 。</p>
+<p>​	在x86上，struct thread_info在文件<code>&lt;asm/thread_info.h&gt;</code>中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">thread_info</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>		*<span class="title">task</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">exec_domain</span>		*<span class="title">exec_domain</span>;</span></span><br><span class="line">    __u32					flag;</span><br><span class="line">    __u32					status;</span><br><span class="line">    __u32					cpu;</span><br><span class="line">    <span class="type">int</span>						preempt_count;</span><br><span class="line">    <span class="type">mm_segment_t</span>			addr_limit;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">restart_block</span>	<span class="title">restart_block</span>;</span></span><br><span class="line">    <span class="type">void</span>					*sysenter_return;</span><br><span class="line">    <span class="type">int</span>						uaccess_err;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="进程描述符的存放"><a href="#进程描述符的存放" class="headerlink" title="进程描述符的存放"></a>进程描述符的存放</h4><blockquote>
+<p>内核通过一个唯一的进程标识值（process identification value）或 PID 来标识每个进程。PID 是一个数，表示为 pid_t 隐含类型，实际上就是一个 int 类型。PID 最大默认设置为32768（short int 短整型的最大值），但这个值可以增加到高达400万，在<code>&lt;linux/threads.h&gt;</code>中定义了PID的最大值。内核把每个进程 PID 存放在它们各自的进程描述符中。</p>
+</blockquote>
+<p>​	在内核中，访问任务通常需要获得指向其 task_struct 的指针，内核中大部分处理进程的代码都是直接通过task_struct进行的。因此，通过<code>current</code>宏来查找到当前正在运行进程的进程描述符的速度就显得尤为重要。有的硬件体系结构可以拿出一个专门寄存器来存放指向当前进程task_struct的指针，用于加快速度。而有些像x86的体系结构寄存器少的就只能在内核栈的尾端创建 thread_info 结构，通过计算偏移量间接地查找 task_struct 结构。</p>
+<h4 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h4><p>​	继承描述符中的 state 域描述了进程的当前状态。系统中每个进程都必然处于五种进程状态中的一种：</p>
+<ul>
+<li>TASK_RUNNING（运行）——进程是可执行的或正在执行，或在运行队列中等待执行。</li>
+<li>TASK_INTERRUPTIBLE（可中断）——进程正在睡眠（也就是说它被阻塞），等待某些条件的达成。一旦这些条件达成，内核就会把进程状态设置为运行。</li>
+<li>TASK_UNINTERRUPTIBLE（不可中断）——这个状态通常在进程必须在等待时不受干扰或等待时间很快就会发生时出现，不会对信号做响应。</li>
+<li>__TASK_TRACED——被其他进程跟踪的进程，例如通过 ptrace 对调试程序进行跟踪。</li>
+<li>__TASK_STOPPED（停止）——进程停止执行；这种状态发生在接收到 SIGSTOP、SIGTTIN、SIGTTOU 等信号的时候。此外，在调试时接收到任何信号都会使进程进入这种状态。</li>
+</ul>
+<h4 id="设置当前进程状态"><a href="#设置当前进程状态" class="headerlink" title="设置当前进程状态"></a>设置当前进程状态</h4><p>​	内核经常需要调整某个进程的状态，这时最好用 ：</p>
+<p><code>set_task_state (task, state);	/* 将任务task的状态设置为state */</code></p>
+<p>该函数将指定的进程设置为指定的状态。必要的时候它会设置内存屏障来强制其他处理器作重新排序。否则，它等价于：</p>
+<p><code>task-&gt;state = state;</code></p>
+<h4 id="进程家族树"><a href="#进程家族树" class="headerlink" title="进程家族树"></a>进程家族树</h4><p>​	在 Linux 系统中，所有的进程都是PID为1的 init 进程的后代。内核在系统启动的最后阶段启动init进程。该进程读取系统的初始化脚本（initscript）并执行其他相关程序，最终完成系统启动的整个过程。</p>
+<p>​	系统中的每个进程必有一个父进程，相应的，每个进程也可以拥有零个或多个子进程。进程间的关系存放在进程描述符中，每个 task_struct 都包含一个指向其父进程 task_struct 的叫做 parent 的指针，还包含一个称为 children 的子进程链表。</p>
+<p>对于当前进程，可以通过下面的代码获得其父进程的进程描述符：</p>
+<p><code>struct task_struct	*my_parent = current-&gt;parent;</code></p>
+<p>同样可以按以下方式依次访问子进程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">task</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">list</span>;</span></span><br><span class="line"></span><br><span class="line">list_for_each(<span class="built_in">list</span>, &amp;current-&gt;children) &#123;</span><br><span class="line">    task = list_entry(<span class="built_in">list</span>, <span class="keyword">struct</span> task_struct, sibling);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只需要通过简单的重复方式就可以遍历系统中的所有进程。这非常容易做到，因为任务队列本来就是一个双向的循环链表。</p>
+<blockquote>
+<p><strong>特别提醒</strong> 	在一个拥有大量进程的系统中通过重复来遍历所有的进程代价是很大的。因此，如果没有充足的理由，别这样做。。。</p>
+</blockquote>
+<h3 id="进程创建"><a href="#进程创建" class="headerlink" title="进程创建"></a>进程创建</h3><blockquote>
+<p>Unix进程创建过程：首先在新的地址空间里创建进程，读入可执行文件，最后开始执行。Unix把上述步骤分解到两个单独的函数中去执行：<code>fork()</code>和<code>exec()</code>。首先，fork () 通过拷贝当前进程创建一个子进程。子进程与父进程的区别仅仅在于PID、PPID和某些资源和统计量（例如，挂起的信号）。exec () 函数负责读取可执行文件并将其载入地址空间开始运行。</p>
+</blockquote>
+<h4 id="写时拷贝"><a href="#写时拷贝" class="headerlink" title="写时拷贝"></a>写时拷贝</h4><p>​	传统的 fork() 系统调用直接把所有的资源复制给新创建的进程，这种实现简单但效率低下，因为它拷贝的数据也许并不共享。如果新进程打算立即执行一个新的映像，那么所有的拷贝都将前功尽弃。</p>
+<p>​	Linux的 fork() 使用<strong>写时拷贝</strong>（copy-on-write）页实现，这是一种可以推迟甚至免除拷贝数据的技术。内核此时并不复制整个进程地址空间，而是让父进程和子进程共享同一个拷贝。只有需要写入的时候，数据才会被复制。</p>
+<p>​	fork() 的实际开销就是复制父进程的页表以及给子进程创建唯一的进程描述符。</p>
+<h4 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h4><p>​	Linux通过 clone() 系统调用实现 fork()。这个调用通过一系列的参数标志来指明父、子进程需要共享的资源。fork()、vfork() 和 __clone() 库函数都根据各自需要的参数标志去调用 clone()，然后由 clone() 去调用 do_fork()。</p>
+<p>​	do_fork 完成了创建中的大部分工作，它定义于 kernel&#x2F;fork.c 文件中。该函数调用 copy_process() 函数，然后让进程开始运行。copy_process() 函数完成的工作很有意思：</p>
+<p>​	1）调用 dup_task_struct() 为新进程创建一个内核栈、thread_info结构和 task_struct，这些值与当前进程的值相同。</p>
+<p>​	2）检查并确保新创建这个子进程后，当前用户所拥有的进程数目没有超出给它分配的资源限制。</p>
+<p>​	3）子进程着手使自己与父进程区别开来。进程描述符内的许多成员都要被清0或设为初始值。</p>
+<p>​	4）子进程的状态被设置为 TASK_UNINTERRUPTIBLE，以保证它不会投入运行。</p>
+<p>​	5）copy_process() 调用 copy_flags() 以更新 task_struct 的flags 成员。</p>
+<p>​	6）调用 alloc_pid() 为新进程分配一个有效的PID。</p>
+<p>​	7）根据传递给 clone() 的参数标志， copy_process() 拷贝或共享打开的文件、文件系统信息、信号处理函数、进程地址空间和命名空间等。</p>
+<p>​	8）最后，copy_process() 做扫尾工作并返回一个指向子进程的指针。</p>
+<p>​	再回到 do_fork() 函数，如果 copy_process() 函数成功返回，新创建的子进程被唤醒并让其投入运行。<strong>内核有意选择子进程首先执行</strong>。因为一般子进程都会调用 exec() 函数，这样可以避免写时拷贝的额外开销。</p>
+<h4 id="vfork"><a href="#vfork" class="headerlink" title="vfork()"></a>vfork()</h4><p>除了不拷贝父进程的页表项外，vfork() 系统调用和 fork() 的功能相同。如果Linux将来 fork() 有了写时拷贝页表项，那么 vfork() 就彻底没用了。</p>
+<h3 id="线程在Linux中的实现"><a href="#线程在Linux中的实现" class="headerlink" title="线程在Linux中的实现"></a>线程在Linux中的实现</h3><blockquote>
+<p>线程机制是现代编程技术中常用的一种抽象概念。该机制提供了在同一程序共享内存地址空间运行的一组线程。这些线程还可以共享打开的文件和其他资源。</p>
+</blockquote>
+<p>​	Linux实现线程的机制非常独特。从内核的角度来说，它并没有线程这个概念。Linux把所有的线程都当作进程来实现。线程仅仅被视为与其他进程共享某些资源的进程。每个线程都拥有唯一的 task_struct。</p>
+<h4 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h4><p>线程创建和普通进程的创建类似，只不过在调用 clone() 的时候需要传递一些参数标志来指明需要共享的资源：</p>
+<p><code>clone (CLONE_VW | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);</code></p>
+<p>对比一下，一个普通的 fork() 的实现是：</p>
+<p><code>clone (SIGCHLD, 0);</code></p>
+<p>而 vfork() 的实现是：</p>
+<p><code>clone (CLONE_VFORK | CLONE_VW | SIGCHLD, 0);</code></p>
+<p>传递给 clone() 的参数标志决定了新创建进程的行为方式和父子进程间共享的资源种类。这些参数标志定义在<code>&lt;linux/sched.h&gt;</code> 。</p>
+<h4 id="内核线程"><a href="#内核线程" class="headerlink" title="内核线程"></a>内核线程</h4><p>​	内核经常需要在后台执行一些操作，这种任务可以通过内核线程（kernel thread）完成——独立运行在内核空间的标准进程。内核线程和普通的进程间的区别在于内核线程没有独立的地址空间。</p>
+<p>​	Linux确实会把一些任务交给内核线程去做，像 flush 和 ksofirqd 这些任务。在Linux上运行<code>$ ps -ef</code>命令就能看到内核线程。这些线程在系统启动时由另外一些内核线程创建，也只能由其他内核线程创建。在<code>&lt;linux/kthread.h&gt;</code>中申明了接口：</p>
+<p><code>struct task_struct *kthread_create(int (*threadfn)(void *data), void *data, const char namefmt[], ...);</code></p>
+<p>​	新的任务由 kthread 内核进程通过调用 clone() 而创建，新的进程将运行 threadfn 函数，给其传递的参数为 data，进程命名为 namefmt。新创建的进程处于不可运行状态，必须调用 wake_up_process() 明确唤醒它。也可以调用 kthread_run() 来创建一个进程并让它运行起来：</p>
+<p><code>struct task_struct *kthread_run(int (*threadfn)(void *data), void *data, const char namefmt[], ...);</code></p>
+<p>内核线程启动后就一直运行直到调用 do_exit() 退出，或者内核其他部分调用 kthread_stop() 退出。</p>
+<h3 id="进程终结"><a href="#进程终结" class="headerlink" title="进程终结"></a>进程终结</h3><p>​	一般来说，进程析构是自身引起的，发生在进程调用 exit() 系统调用时。不管进程是怎么终结的，该任务大部分要靠 do_exit() （定义于 kernel&#x2F;exit.c）来完成，它做了以下工作：</p>
+<ol>
+<li>将 task_struct 中的标志成员设置为 PF_EXITING。</li>
+<li>调用 del_timer_sync() 删除任一内核定时器，根据返回的结果，确保没有定时器在排队，也没有定时器处理程序在运行</li>
+<li>如果 BSD 的进程记账功能是开启的， do_exit() 调用 acct_update_integrals() 来输出记账信息。</li>
+<li>然后调用 exit_mm() 函数释放进程占用的 mm_struct，如果没有别的进程使用它们，就彻底释放它们。</li>
+<li>接下来调用 sem_exit() 函数。如果进程排队等候IPC信号，它则离开队列。</li>
+<li>调用 exit_files() 和 exit_fs() ，以分别递减文件描述符、文件系统数据的引用计数。如果某个引用计数降为零就可以释放。</li>
+<li>接着把存放在 task_struct 的 exit_code 成员中的任务推出代码置为由 exit() 提供的退出代码。</li>
+<li>调用 exit_notify() 向父进程发送信号，给子进程重新找养父，并把进程状态设为 EXIT_ZOMBIE。</li>
+<li>do_exit() 调用 schedule() 切换到新的进程。因为处于 EXIT_ZOMBIE 状态的进程不会被调度。这是最后一步，do_exit() 永不返回。</li>
+</ol>
+<p>​     至此，与进程相关联的所有资源都被释放掉了，此时进程占用的所有内存就是内核栈、thread_info结构和task_struct结构。此时进程存在的唯一目的就是向它的父进程提供信息。父进程检索到信息后，或通知内核那是无关信息后，由进程所持有的剩余内存被释放，归还给系统使用。</p>
+<h4 id="删除进程描述符"><a href="#删除进程描述符" class="headerlink" title="删除进程描述符"></a>删除进程描述符</h4><p>​	在调用了 do_exit() 之后，尽管线程已经僵死不能再运行了，但是系统还保留了它的进程描述符。因此，进程所需的清理工作和进程描述符的删除被分开执行。</p>
+<p>​	wait() 这一族函数都已通过唯一且复杂的系统调用 wait4() 来实现的。它的标准动作是挂起调用它的进程，直到其中一个子进程退出，此时函数会返回子进程的PID。调用该函数时提供的函数指针会包含子函数退出时的退出代码。</p>
+<p>​	当最终需要释放进程描述符时，release_task() 会被调用，完成以下工作：</p>
+<ol>
+<li>它调用 __exit_signal()，该函数调用 _unhash_process()，后者又调用 detack_pid() 从pidhash 上删除该进程，同时也从任务列表中删除该进程。</li>
+<li>_exit_signal() 释放目前僵死进程所使用的所有剩余资源，并进行最终统计和记录。</li>
+<li>如果这个进程是线程组最后一个进程，并且领头进程已经死掉，那么 release_task() 就要通知僵死的领头进程的父进程。</li>
+<li>release_task() 调用 put_task_struct() 释放进程内核栈和 thread_info 结构所占的页，并释放 task_struct 所占的 slab 高速缓存。</li>
+</ol>
+<p>至此，进程描述符和所有进程独享资源就全部释放掉了。</p>
+<h4 id="孤儿进程造成的进退维谷"><a href="#孤儿进程造成的进退维谷" class="headerlink" title="孤儿进程造成的进退维谷"></a>孤儿进程造成的进退维谷</h4><blockquote>
+<p>如果父进程在子进程之前退出，必须有机制来保证子进程能找到一个新的父亲，否则这些称为孤儿的进程就会在退出时处于僵死状态，白白地消耗内存。</p>
+</blockquote>
+<p>​	解决的办法就是给子进程在当前线程组内找一个线程作为父亲，如果不行，就让 init 做它们的父进程。在 do_exit() 会调用 exit_notify() ，该函数会调用 forget_original_parent() ，而后者会调用 find_new_reaper() 来执行寻父过程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">struct</span> task_struct *<span class="title function_">find_new_reaper</span><span class="params">(<span class="keyword">struct</span> task_struct *father)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pid_namespace</span> *<span class="title">pid_ns</span> =</span> task_active_pid_ns(father);<span class="comment">//获取任务中包含进程的命名空间信息</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">thread</span>;</span></span><br><span class="line">    </span><br><span class="line">    thread = father;</span><br><span class="line">    while_each_thread(father, thread) &#123;		<span class="comment">//宏遍历所有进程信息</span></span><br><span class="line">        <span class="keyword">if</span> (thread-&gt;flags &amp; PF_EXITING)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        <span class="keyword">if</span> (unlikely(pid_ns-&gt;child_reaper == father))<span class="comment">//指向该进程的task_struct的指针</span></span><br><span class="line">            pid_ns-&gt;child_reaper = thread;</span><br><span class="line">        <span class="keyword">return</span> thread;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(unlikely(pid_ns-&gt;child_reaper == father)) &#123;</span><br><span class="line">        write_unlock_irq(&amp;tasklist_lock);<span class="comment">//解写锁，并且开中断</span></span><br><span class="line">        <span class="keyword">if</span> (unlikely(pid_ns == &amp;init_pid_ns))</span><br><span class="line">            panic(<span class="string">&quot;Attempted to kill init!&quot;</span>);</span><br><span class="line">        zap_pid_ns_processes(pid_ns);</span><br><span class="line">        write_lock_irq(&amp;tasklist_lock);<span class="comment">//加写锁，并且关中断</span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * We can not clear -&gt;child_reaper or leave it alone.</span></span><br><span class="line"><span class="comment">        * There may by stealth EXIT_DEAD tasks on -&gt;children,</span></span><br><span class="line"><span class="comment">        * forget_original_parent() must move them somewhere.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        pid_ns-&gt;child_reaper = init_pid_ns.child_reaper;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pid_ns-&gt;child_reaper;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​	这段代码试图找到进程所在的线程组内其他进程。如果线程组内没有其他进程，就找到并返回的是 init 进程。找到之后，只需遍历所有子进程并为它们设置新的父进程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">reaper = find_new_reaper(father);</span><br><span class="line">list_for_each_entry_safe(p, n, &amp;father-&gt;children, sibling) &#123;</span><br><span class="line">    p-&gt;real_parent = reaper;</span><br><span class="line">    <span class="keyword">if</span> (p-&gt;parent == father) &#123;</span><br><span class="line">        BUG_ON(p-&gt;ptrace);</span><br><span class="line">        p-&gt;parent = p-&gt;real_parent;</span><br><span class="line">    &#125;</span><br><span class="line">    reparent_thread(p, father);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​	然后调用 ptrace_exit_finish() 同样进行新的寻父过程，不过这次是给 ptraced 的子进程寻找父亲：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">exit_ptrace</span><span class="params">(<span class="keyword">struct</span> task_struct *tracer)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>, *<span class="title">n</span>;</span></span><br><span class="line">    LIST_HEAD(ptrace_dead);</span><br><span class="line">    write_lock_irq(&amp;tasklist_lock);</span><br><span class="line">    list_for_each_entry_safe(p, n, &amp;tracer-&gt;ptraced, ptrace_entry) &#123;</span><br><span class="line">        <span class="keyword">if</span> (__ptrace_detach(tracer, p))</span><br><span class="line">            list_add(&amp;p-&gt;ptrace_entry, &amp;ptrace_dead);</span><br><span class="line">    &#125;</span><br><span class="line">    write_unlock_irq(&amp;tasklist_lock);</span><br><span class="line">    BUG_ON(!list_empty(&amp;tracer-&gt;ptraced));</span><br><span class="line">    list_for_each_entry_safe(p, n, &amp;ptrace_dead, ptrace_entry) &#123;</span><br><span class="line">        list_del_init(&amp;p-&gt;ptrace_entry);</span><br><span class="line">        release_task(p);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​	这段代码遍历了两个链表：子进程链表和 ptrace 子进程链表，给每个子进程设置新的父进程。这两个链表同时存在是内核的一个新特性。当一个进程被跟踪时，它的临时父亲设定为调式进程。此时如果它的父进程退出了，系统会为它和它的所有兄弟重新找一个父进程。</p>
+<p>​	在以前的内核中，这需要遍历系统所有的进程来找这些子进程。现在的解决方法是在一个单独的被ptrace跟踪的子进程链表中搜索相关的兄弟进程——用两个相对较小的链表减轻遍历的消耗。</p>
+<p>​	一旦系统为进程成功地找到和设置了新的父进程，就不会出现僵死进程遗留危险。init 进程会例行调用 wait() 来检查其子进程，清除所有与其相关的僵死进程。</p>
+
       
 
       
@@ -217,16 +321,75 @@
 
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">从内核出发</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -241,424 +404,32 @@
         </div>
         
         
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-从内核出发" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/">从内核出发</a>
-    </h1>
-  
-
-        
-        <a href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/" class="archive-article-date">
-  	<time datetime="2022-11-18T15:19:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-18</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="获取内核源码"><a href="#获取内核源码" class="headerlink" title="获取内核源码"></a>获取内核源码</h2><h3 id="安装内核源代码"><a href="#安装内核源代码" class="headerlink" title="安装内核源代码"></a>安装内核源代码</h3><p>​	内核压缩以GNU zip (gzip) 和bzip2两种形式发布。bzip2是默认和首选形式，因为它在压缩上比gzip更有优势。如果压缩形式是bzip2，则运行：</p>
-<p><code>$ tar xvjf linux-x.y.z.tar.bz2</code> </p>
-<p>​	如果压缩形式是GNU的zip，则运行：</p>
-<p><code>$ tar xvzf linux-x.y.z.tar.gz</code> </p>
-<blockquote>
-<p>在我们所能触及的 linux 系统，比如ubuntu，内核源码一般安装在 &#x2F;usr&#x2F;src&#x2F;linux 目录下，但不要把这个源码树用于开发。</p>
-</blockquote>
-<p>内核源码树：</p>
-        
-          <a class="article-more-a" href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Linux</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Linux内核设计与实现//" class="article-tag-list-link color3">Linux内核设计与实现</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6%E5%8F%8A%E4%BB%BB%E5%8A%A1%E7%BB%93%E6%9E%84"><span class="toc-number">2.</span> <span class="toc-text">进程描述符及任务结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%86%E9%85%8D%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="toc-number">2.1.</span> <span class="toc-text">分配进程描述符</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6%E7%9A%84%E5%AD%98%E6%94%BE"><span class="toc-number">2.2.</span> <span class="toc-text">进程描述符的存放</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="toc-number">2.3.</span> <span class="toc-text">进程状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE%E5%BD%93%E5%89%8D%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="toc-number">2.4.</span> <span class="toc-text">设置当前进程状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%AE%B6%E6%97%8F%E6%A0%91"><span class="toc-number">2.5.</span> <span class="toc-text">进程家族树</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA"><span class="toc-number">3.</span> <span class="toc-text">进程创建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E6%97%B6%E6%8B%B7%E8%B4%9D"><span class="toc-number">3.1.</span> <span class="toc-text">写时拷贝</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#fork"><span class="toc-number">3.2.</span> <span class="toc-text">fork()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#vfork"><span class="toc-number">3.3.</span> <span class="toc-text">vfork()</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E5%9C%A8Linux%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">4.</span> <span class="toc-text">线程在Linux中的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="toc-number">4.1.</span> <span class="toc-text">创建线程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B"><span class="toc-number">4.2.</span> <span class="toc-text">内核线程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E7%BB%88%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">进程终结</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="toc-number">5.1.</span> <span class="toc-text">删除进程描述符</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AD%A4%E5%84%BF%E8%BF%9B%E7%A8%8B%E9%80%A0%E6%88%90%E7%9A%84%E8%BF%9B%E9%80%80%E7%BB%B4%E8%B0%B7"><span class="toc-number">5.2.</span> <span class="toc-text">孤儿进程造成的进退维谷</span></a></li></ol></li></ol>
+                    </div>
+                </span>
             </div>
         </div>
         
-        
     </div>
 </aside>
 
 
 
-
   
-    <article id="post-minigui实现软键盘" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/">minigui实现软键盘</a>
-    </h1>
   
 
-        
-        <a href="/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/" class="archive-article-date">
-  	<time datetime="2022-11-16T03:27:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-16</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="MiniGUI原输入法消息接口"><a href="#MiniGUI原输入法消息接口" class="headerlink" title="MiniGUI原输入法消息接口"></a>MiniGUI原输入法消息接口</h3><p>MiniGUI在其开源版本的libminigui-1.3.3中提供了一个基于PC标准键盘输入的输入法。但是在开源版本libminigui-1.6.10以后删除了该模块，但其输入法接口依然与libminigui-1.3.3完全一致。该输入法支持标准PC键盘的汉字和英文字母输入，但是对于特殊字符和特殊键盘输入或者鼠标软键盘输入的情况，MiniGUI则不支持。</p>
-<blockquote>
-<p>MiniGUI的输入法是一个相对独立的模块（称为IME），它实际是一个特殊的主窗口，以顶层窗口的形式出现，并截获系统中的按键信息，经过适当的处理，将翻译之后的字符发送到当前活动窗口。MiniGUI内部提供了用来实现GB2312输入法的输入法窗口，用户也可以编写自己的定制输入法。</p>
-</blockquote>
-<p>MiniGUI-Threads为GB2312输入法定义了一个入口函数：</p>
-<p><code>HWND GBIMEWindow (HWND hosting);</code></p>
-<p>​	该函数创建一个可以拖动的GB2312输入法窗口。</p>
-        
-          <a class="article-more-a" href="/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/miniGUI//" class="article-tag-list-link color3">miniGUI</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-USB设备的配置" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/14/USB%E8%AE%BE%E5%A4%87%E7%9A%84%E9%85%8D%E7%BD%AE/">USB设备的配置</a>
-    </h1>
   
 
-        
-        <a href="/2022/11/14/USB%E8%AE%BE%E5%A4%87%E7%9A%84%E9%85%8D%E7%BD%AE/" class="archive-article-date">
-  	<time datetime="2022-11-14T14:03:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="USB-设备的配置"><a href="#USB-设备的配置" class="headerlink" title="USB 设备的配置"></a>USB 设备的配置</h2><blockquote>
-<p>下面完成对USB设备的移植，其中包括U盘，USB鼠标键盘。在Linux内核中，已经支持U盘，USB鼠标键盘了，这里只需要进行对应的配置，然后就可以完成对他们的支持</p>
-</blockquote>
-<p>在Linux内核根目录输入<code>$ make menuconfig</code>，然后就进入了配置单，配置如下：</p>
-<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">	SCSI device support ---&gt;</span><br><span class="line">		&lt;*&gt; SCSI device support</span><br><span class="line">		[*] legacy/<span class="keyword">proc</span>/scsi/support</span><br><span class="line">		&lt;*&gt;<span class="title"> SCSI</span> disk<span class="title"> support</span></span><br><span class="line">		&lt;*&gt;<span class="title"> SCSI</span> CDROM<span class="title"> support</span></span><br><span class="line">	[*]<span class="title"> HID</span> Devices ---&gt;</span><br><span class="line">		&lt;*&gt;<span class="title"> USB</span> Human<span class="title"> Interface</span> Device (full<span class="title"> HID)</span> support</span><br><span class="line">		[*] /dev/hiddev<span class="title"> raw</span> HID<span class="title"> device</span> support</span><br><span class="line">	[*]<span class="title"> USB</span> support ---&gt;</span><br><span class="line">		&lt;*&gt;<span class="title"> Support</span> for<span class="title"> Host-side</span> USB</span><br><span class="line">		[*]<span class="title"> USB</span> device<span class="title"> filesystem</span></span><br><span class="line">		[*]<span class="title"> USB</span> device<span class="title"> class-devices(DEPRECATED)</span></span><br><span class="line">		&lt;*&gt;<span class="title"> OHCI</span> HCD<span class="title"> support</span></span><br><span class="line">		&lt;*&gt;<span class="title">	USB</span> Mass<span class="title"> Storage</span> support</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Linux</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/14/USB%E8%AE%BE%E5%A4%87%E7%9A%84%E9%85%8D%E7%BD%AE/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-我的第一篇博客文章" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/14/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">我的第一篇博客文章</a>
-    </h1>
   
 
-        
-        <a href="/2022/11/14/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/" class="archive-article-date">
-  	<time datetime="2022-11-14T07:45:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h2><p>内容</p>
-<hr>
-<h2 id="第二章"><a href="#第二章" class="headerlink" title="第二章"></a>第二章</h2><p>内容</p>
-<hr>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2>
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">C++</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/14/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/11/14/hello-world/">Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2022/11/14/hello-world/" class="archive-article-date">
-  	<time datetime="2022-11-14T07:42:16.346Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/11/14/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
 
 
@@ -681,8 +452,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
