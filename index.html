@@ -154,6 +154,283 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-SQLite-C-C-接口" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/">SQLite C/C++接口</a>
+    </h1>
+  
+
+        
+        <a href="/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/" class="archive-article-date">
+  	<time datetime="2022-11-22T12:39:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-22</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>以下两个对象和八个方法构成SQLite接口的基本元素：</p>
+<ul>
+<li><code>sqlite3</code>：数据库连接对象。通过<code>sqlite3_open()</code> 创建，通过<code>sqlite3_close()</code> 销毁</li>
+<li><code>sqlite3_stmt</code>：SQL语句对象。通过<code>sqlite3_prepare()</code> 创建，通过<code>sqlite3_finalize()</code> 销毁</li>
+<li><code>sqlite3_open()</code>：打开新的或现有的SQLite数据库的连接</li>
+<li><code>sqlite3_prepare()</code>：将SQL文本编译为字节代码，它将用来完成查询或更新数据库的工作</li>
+<li><code>sqlite3_bind()</code>：将应用程序数据存储到原始SQL语句的参数中</li>
+<li><code>sqlite3_step()</code>：将sqlite3_stmt前进到下一个结果行或完成</li>
+<li><code>sqlite3_column()</code>：当前结果行的列值</li>
+<li><code>sqlite3_finalize()</code>：sqlite3_stmt 对象的析构函数</li>
+<li><code>sqlite3_close()</code>：sqlite3对象的析构函数</li>
+<li><code>sqlite3_exec()</code>：一个包装函数，对一个或多个SQL语句字符串执行 sqlite3_prepare()、sqlite3_step()、sqlite3_column() 和 sqlite3_finalize()。</li>
+</ul>
+<p>SQLite有超过225个API，但是大多数API是可选的，并且非常专业，可以被初学者忽略。核心API小巧，简单易学。</p>
+<h3 id="核心对象和接口"><a href="#核心对象和接口" class="headerlink" title="核心对象和接口"></a>核心对象和接口</h3><p>SQL数据库引擎的主要任务是评估SQL语句，为此，开发人员需要两个对象：</p>
+<ul>
+<li>该数据库连接对象：sqlite3</li>
+<li>准备好的SQL语句对象：sqlite3_stmt</li>
+</ul>
+<p>严格来说，并不需要SQL语句对象，因为可以使用便捷包装器接口 sqlite3_exec 或sqlite3_get_table，这些包装器封装并隐藏了SQL语句对象。</p>
+<p>核心接口摘要：</p>
+<ul>
+<li><code>sqlite3_open()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_open</span> <span class="params">(</span></span><br><span class="line"><span class="params">	<span class="type">const</span> <span class="type">char</span> *文件名,	<span class="comment">/* 数据库文件名(UTF-8) */</span></span></span><br><span class="line"><span class="params">    sqlite3 **ppDb		<span class="comment">/* 传出参数：SQLite数据库句柄 */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br><span class="line"><span class="comment">// 成功打开（和/或创建）数据库，返回SQLITE_OK，否则返回错误编码</span></span><br></pre></td></tr></table></figure>
+
+<p>该接口打开SQLite数据库文件的连接，并返回数据库连接对象。这通常是应用程序进行的第一个SQLite API调用，并且是大多数其他API的前提。</p>
+<ul>
+<li><code>sqlite3_prepare()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_prepare</span> <span class="params">(</span></span><br><span class="line"><span class="params">	sqlite3 *db,	<span class="comment">/* 数据库句柄 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> *zSql,	<span class="comment">/* SQL语句，UTF-8编码 */</span></span></span><br><span class="line"><span class="params">    <span class="type">int</span> nByte,	<span class="comment">/* zSql的最大长度，以字节为单位 */</span></span></span><br><span class="line"><span class="params">    sqlite3_stmt **ppStmt,	<span class="comment">/* 传出参数：语句句柄 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> **pzTail	<span class="comment">/* 传出参数：指向zSql未使用部分的指针 */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br><span class="line"><span class="comment">// 成功返回SQLITE_OK，否则返回错误编码</span></span><br></pre></td></tr></table></figure>
+
+<p>将每一个SQL语句视为一个小型计算机程序，sqlite3_prepare() 的目的是将该程序编译为目标代码，然后 sqlite3_step() 接口运行目标代码以获取结果。</p>
+<ul>
+<li><code>sqlite3_step()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_step</span> <span class="params">(sqlite3_stmt *)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果正在执行的SQL语句返回任何数据，则每次准备好调用者处理新的数据行时，都将返回 SQLITE_ROW。可以使用列访问功能访问这些值，再次调用 sqlite3_step() 检索下一行数据。不返回结果的语句（如INSERT、UPDATE或DELETE语句）在单次调用时便运行完毕。</p>
+<ul>
+<li><code>sqlite3_column()</code></li>
+</ul>
+<p>该接口从结果集的当前行返回一个单列，可以多次调用此接口来查找该行所有列的值。</p>
+<p>实际上，这并不是SQLite中的API，而是代表整个函数系列的占位符</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">void</span> *<span class="title function_">sqlite3_column_blob</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">double</span> <span class="title function_">sqlite3_column_double</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_int</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line">sqlite3_int <span class="number">64</span> sqlite3_column_int64(sqlite3_stmt *, <span class="type">int</span> iCol);</span><br><span class="line"><span class="type">const</span> <span class="type">unsigned</span> <span class="type">char</span> *<span class="title function_">sqlite3_column_text</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">void</span> *<span class="title function_">sqlite3_column_text16</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line">sqlte3_value *<span class="title function_">sqlite3_column_value</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_bytes</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_bytes16</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_type</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>sqlite3_finalize()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_finalize</span><span class="params">(sqlite3_stmt *pStmt)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>必须使用此接口销毁每个SQL语句对象，以避免内存泄漏。</p>
+<ul>
+<li><code>sqlite3_close()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_close</span><span class="params">(sqlite3 *)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>关闭数据连接。</p>
+<ul>
+<li><code>sqlite3_exec()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_exec</span> <span class="params">(</span></span><br><span class="line"><span class="params">	sqlite3 *,	<span class="comment">/* 一个打开的数据库 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> *sql,	<span class="comment">/* 要求值的SQL */</span></span></span><br><span class="line"><span class="params">    <span class="type">int</span> (*callback)(<span class="type">void</span> *, <span class="type">int</span>, <span class="type">char</span> **, <span class="type">char</span> **), <span class="comment">/* 回调函数 */</span></span></span><br><span class="line"><span class="params">    <span class="type">void</span> *,	<span class="comment">/* 回调函数的第一个参数 */</span></span></span><br><span class="line"><span class="params">    <span class="type">char</span> **errmsg	<span class="comment">/* 此处写的错误msg */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>该API在作为第一个参数传入的数据库连接的上下文中，运行零个或多个以UTF-8编码的、以分号分隔的SQL语句，并将其传递给第二个参数。如果第三个参数的回调函数不为NULL，则及那个从SQL语句得到的每个结果行调用该函数。第4个参数将中继到每个回调函数的第一个参数。如果传入SQL语句时发生了错误，则当前语句停止执行，随后的语句将被跳过，如果第5个参数不为NULL，则任何错误消息都会写入从sqlite3_malloc() 获得的内存中，并通过第5个参数传递回去。</p>
+<p>回调函数的第2个参数是结果中的列数，第三个参数是一个数组指针，该数组指向从 sqlite3_column_text() 获得的字符串。如果结果行的元素为NULL，则回调的相应字符串指针为NULL指针。第4个参数是指向字符串的指针数组，其中每个条目表示从 sqlite3_column_name() 获得的相应结果列的名称。</p>
+<h3 id="配置SQLite"><a href="#配置SQLite" class="headerlink" title="配置SQLite"></a>配置SQLite</h3><p>SQLite的默认配置适用于大多数应用程序，但是有时候开发人员想要调整设置，以尝试提高性能，或者利用一些晦涩的功能。</p>
+<p>sqlite3_config() 接口用来修改配置，在创建任何数据库连接之前，必须调用该接口。该接口允许程序员做以下事情：</p>
+<ul>
+<li>调整SQLite进行内存分配的方式，包括设置适用于安全关键的实时嵌入式系统和应用程序定义的内存分配器的备用内存分配器</li>
+<li>设置整个过程的错误日志</li>
+<li>指定应用程序定义的页面缓存</li>
+<li>调整互斥锁的使用，以使其适合于各种线程模型，或替换应用程序定义的互斥锁系统。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">SQLite</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-进程调度" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/11/20/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/">进程调度</a>
+    </h1>
+  
+
+        
+        <a href="/2022/11/20/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/" class="archive-article-date">
+  	<time datetime="2022-11-20T13:21:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="多任务"><a href="#多任务" class="headerlink" title="多任务"></a>多任务</h3><blockquote>
+<p>多任务操作系统就是能同时并发地交互执行多个进程的操作系统。在单处理器机器上，这会产生多个进程在同时运行的幻觉。在多处理器机器上，这会使多个进程在不同的处理器上真正同时、并行地运行。</p>
+</blockquote>
+<p>​		多任务操作系统可以划分为两类：<strong>非抢占式多任务</strong>和<strong>抢占式多任务</strong>。在抢占式的多任务模式下，进程在被抢占之前能够运行的时间是预先设置好的，有一个专门的名字叫进程的<strong>时间片</strong>，这样可以避免个别进程独占系统资源。当今众多现代操作系统对程序运行都采用了动态时间片的计算的方式，并且引入了可配置的计算策略。但 Linux 独一无二的“公平”调度程度本身并没有采取时间片来达到公平调度。</p>
+<p>​		相反，在非抢占式多任务模式下，除非进程自己主动停止运行，否则它会一直执行。进程主动挂起自己的操作称为<strong>让步</strong>。进程做出让步以便每个可运行进程享有足够的处理器时间。但这个机制有很多缺点：调度程序无法对每个进程该执行多长时间做出统一规定，所以进程独占的处理器时间可能超出用户的预料，更糟的会出现一个绝不让步的悬挂进程就能使系统崩溃。</p>
+<h3 id="Linux-的进程调度"><a href="#Linux-的进程调度" class="headerlink" title="Linux 的进程调度"></a>Linux 的进程调度</h3><p>​		在Linux2.5以前的版本，调度程序简陋而难堪大任，于是在Linux2.5版本采用了一种叫做 O(1) 调度程序，主要涉及静态时间片算法和针对每一处理器的运行队列。但该算法对于调度那些响应时间敏感的程序有一些先天不足。这些程序我们称其为<strong>交互进程</strong>。</p>
+<p>​		自Linux2.6内核，开发人员为了提高对交互程序的调度性能引入了新的进程调度算法。其中最著名的是<strong>反转楼梯最后期限调度算法（RSDL）</strong>。最终在2.6.23内核版本中替代了 O(1) 调度算法，它此刻被称为“完全公平调度算法”，或简称 CFS。</p>
+<h3 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h3><blockquote>
+<p>策略决定调度程序在何时让什么进程运行。调度器的策略往往就决定系统的整体印象，并且还要负责优化使用处理器时间。</p>
+</blockquote>
+<h4 id="I-x2F-O-消耗型和处理器消耗型的进程"><a href="#I-x2F-O-消耗型和处理器消耗型的进程" class="headerlink" title="I&#x2F;O 消耗型和处理器消耗型的进程"></a>I&#x2F;O 消耗型和处理器消耗型的进程</h4><p>​		进程可以被分为<strong>I&#x2F;O消耗型</strong>和<strong>处理器消耗型</strong>。前者指进程大部分时间用来提交I&#x2F;O请求或者等待I&#x2F;O请求。而后者指进程把时间大多用在执行代码，除非被抢占，否则就一直不停地运行。调度器不应该经常让它们运行，而是降低它们的调度频率并延长运行时间。</p>
+<p>​		但这种划分也并非绝对，进程可以同时展现两种行为。调度策略通常要在两个矛盾的目标中间寻找平衡：<strong>进程响应迅速</strong>和<strong>最大系统利用率（高吞吐量）</strong>。Linux为了保证交互式应用和桌面系统的性能，所以对进程的响应做了优化，更倾向于优先调度I&#x2F;O消耗型进程。</p>
+<h4 id="进程优先级"><a href="#进程优先级" class="headerlink" title="进程优先级"></a>进程优先级</h4><p>​		调度算法中最基本的一类就是基于优先级的调度，这是一种根据进程的价值和其对处理器时间的需求来对进程分级的想法。</p>
+<p>​		Linux采用了两种不同的优先级范围。第一种是用 <strong>nice 值</strong>，它的范围是从-20到+19，默认值为0；越大的 nice 值意味着更低的优先级，更少的处理器时间。你可以通过 <code>$ ps -el</code>命令查看系统中的进程列表，结果中标记 NI 的一列就是进程对应的 nice 值。</p>
+<p>​		第二种范围是<strong>实时优先级</strong>，其值是可配置的，默认情况下它的变化范围是从0到99。越高的实时优先级数意味着进程优先级越高。任何实时进程的优先级都高于普通的进程，也就是说实时优先级和 nice 优先级处于互不相交的两个范畴。你可以通过以下命令查看你系统的进程列表以及对应的实时优先级（位于RTPRIO列下）：</p>
+<p><code>$ ps -eo state,uid,pid,ppid,rtprio,time,comm</code>  </p>
+<p>如果进程对应列显示<code>-</code>，则说明不是实时进程。</p>
+<h4 id="时间片"><a href="#时间片" class="headerlink" title="时间片"></a>时间片</h4><p>​		时间片是一个数值，表明进程在被抢占前所能持续运行的时间。时间片太长会对交互的响应表现欠佳，让人感觉无法并发；时间片太短会明显增大进程切换带来的处理器耗时。</p>
+<p>​		I&#x2F;O 消耗型不需要长的时间片，而处理器消耗型的进程则希望越长越好。Linux的 CFS 调度器并没有直接分配时间片到进程，而是把处理器的使用比例分给了进程。这样一来，进程所获得的处理器时间其实是和系统负载密切相关的。这个比例还会受到进程 nice 值的影响，nice 值作为权重将调整进程所使用的处理器时间使用比。</p>
+<h4 id="调度策略的活动"><a href="#调度策略的活动" class="headerlink" title="调度策略的活动"></a>调度策略的活动</h4><p>​		想象以下情形：有一个系统有两个进程，一个文字编辑程序和一个视频编码程序。文字编辑显然是 I&#x2F;O 消耗型的，因为它大部分时间在等待用户的键盘输入。视频编码是处理器消耗型，除了最开始从磁盘读出原始数据流和最后把处理好的视频输出外，程序所有的时间都用来对原始数据进行视频编码。</p>
+<p>​		在这种场景下，理性情况是调度器应该给予文本编辑程序更多的处理器时间，因为它属于交互式应用，希望在它需要时总是能得到处理器，并且文本编辑器在被唤醒时抢占视频编码程序，这样才能确保文本编辑器具有很好的交互性能，以便能响应用户输入。</p>
+<p>​		在多数操作系统，系统分配给文本编辑器更高的优先级和更多的时间片。但Linux操作系统的 CFS 如果注意到文本编辑器的处理器使用比是50%，但实际用的很少，这种情况下为让所有进程能公平分享处理器的承诺，它会立刻抢占视频编码程序，让文本编辑器投入运行，处理了用户的击键输入后又一次进入睡眠等待用户下一次输入。因为文本编辑器并没有消费掉承诺给它的50%处理器使用比，因此 CFS 总会毫不犹豫地让文本编辑器在需要时被投入运行，而让视频处理程序只能在剩下的时刻运行。</p>
+<h3 id="Linux调度算法"><a href="#Linux调度算法" class="headerlink" title="Linux调度算法"></a>Linux调度算法</h3><h4 id="调度器类"><a href="#调度器类" class="headerlink" title="调度器类"></a>调度器类</h4><p>Linux调度器是以模块方式提供的，这样做的目的是允许不同类型的进程可以有针对性地选择调度算法。这种模块化结构被称为<strong>调度器类</strong>，它允许多种不同的可动态添加的调度算法并存，调度属于自己范畴的进程。每个调度器都有一个优先级，基础的调度器代码定义在<code>kernel/sched.c</code>文件中，它会按照优先级顺序遍历调度类，拥有一个可执行进程的最高优先级的调度器类胜出，去选择下面要执行的那一个程序。</p>
+<p>完全公平调度（CFS）是一个针对普通进程的调度类，在Linux中称为 SCHED_NORMAL，CFS 算法实现定义在<code>kernel/sched_fair.c</code>中。</p>
+<h4 id="Unix系统中的进程调度"><a href="#Unix系统中的进程调度" class="headerlink" title="Unix系统中的进程调度"></a>Unix系统中的进程调度</h4><p>在Unix系统上，优先级以nice值形式输出给用户空间，听起来容易实现却又一些问题：</p>
+<p>​		第一个问题，若将 nice 值映射到时间片，就必然需要将 nice 单位值对应到处理器的绝对时间，但这样将导致进程切换无法最优化进行。举例：假定我们将默认 nice 值（0）对应100ms时间片，再让最高 nice 值（+20）对应时间片是5ms。此时如果我们运行两个同等低优先级的进程就会出现两个进程各自获得一半的处理器时间，但每个进程仅仅只能获得5ms的处理器时间。</p>
+<p>​		第二个问题涉及相对 nice 值，这也和前面的 nice 值到时间片映射关系脱不了干系。假设两个进程，一个 nice值是0，另一个是1，它们将被映射到时间片100ms和95ms，时间片差别不大。但如果一个 nice 值是18，另一个是19，它们被映射到时间片位10ms 和5ms，此时差别就是两倍的关系了。</p>
+<p>​		第三个问题，如果执行 nice 值到时间片的映射，我们需要分配一个绝对时间片，而且这个绝对时间片必须能在内核的测试范围内。在多数操作系统中，就意味着时间片必须是定时器节拍的整数倍。但这样会引发一些问题，系统定时器限制了两个时间片的差异：连续的 nice 值映射到时间片，其差别范围多至10ms或者少至1ms。时间片还会随着定时器节拍改变。</p>
+<p>​		第四个问题是关于优先级的调度器为了优化交互任务而唤醒相关进程的问题。在这种系统中，你可能为了进程能更快地投入运行，而去对新要唤醒的进程提升优先级，即便它们的时间片已经用尽了。但这会出现给某些特殊的睡眠&#x2F;唤醒进程打破公平原则，获得更多处理器时间。</p>
+<p>​		上述问题中的绝大多数可以通过对传统Unix调度器进行改造解决。比如，将nice值呈几何增加的方式解决第二个问题；采用一个新的度量机制将从nice值到时间片的映射与定时器节拍分离开来，以此解决第三个问题。但都回避了实质问题——即分配绝对的时间片引发的固定的切换频率，给公平造成了很大变数。</p>
+<p>​		因此，CFS 完全摒弃时间片而是分配给进程一个处理器使用比重，将切换频率置于不断变动中。</p>
+<h4 id="公平调度"><a href="#公平调度" class="headerlink" title="公平调度"></a>公平调度</h4><p>CFS 的做法是允许每个进程运行一段时间、循环轮转、选择运行最少的进程作为下一个运行进程，而不在采用分配给每个进程时间片的做法，CFS 再所有可运行进程总数基础上计算出了一个进程应该运行多久，而不是依靠 nice 值来计算时间片。nice 值再CFS中被作为进程获得的处理器运行比的权重：越高的 nice 值进程获得更低的处理器使用权重。</p>
+<p>每个进程都按其权重在全部可运行进程中所占比例的“时间片”来运行，为了计算准确的时间片，CFS为完美多任务中的无限小调度周期的近似值设立了一个目标，这个目标称为“目标延迟”，越小的调度周期将带来越好的交互性，同时也更接近完美的多任务。但是你必须承受更高的切换代价和更差的系统总吞吐能力。其中更差的吞吐能力指的是可运行的任务数量有限，太多的任务数量会使得每个进程获得处理器使用比和时间片都趋于0，这样就造成了不可接收的切换消耗。CFS为此引入每个进程获得的时间片底线，这个底线称为最小粒度，默认情况下这个值是1ms。</p>
+<p>​		总结：任何进程所获得的处理器时间是由它自己和其他所有可运行进程 nice 值的相对差值决定的。nice 值对时间片的作用不再是算数加权，而是几何加权。任何nice 值对应的绝对时间不再是一个绝对值，而是处理器的使用比。CFS 不是完美的公平，它只是近乎完美的多任务。</p>
+<h3 id="Linux调度的实现"><a href="#Linux调度的实现" class="headerlink" title="Linux调度的实现"></a>Linux调度的实现</h3><h4 id="时间记账"><a href="#时间记账" class="headerlink" title="时间记账"></a>时间记账</h4><p>所有的调度器都必须对进程运行时间做记账。在Unix系统中，分配时间片给每一个进程，当系统时钟节拍发生时，时间片就减少一个节拍周期，当进程的时间片被减少到0，它就会被另一个未减到0的可运行进程抢占。</p>
+<ol>
+<li><p>调度器实体结构</p>
+<p> CFS 不再有时间片的概念，但它也必须维护每个进程运行的时间记账，因为它需要确保每个进程只在公平分配给它的处理器时间内运行。CFS使用的调度器实体结构（定义在文件<code>&lt;linux/sched.h&gt;</code>的 struct_sched_entity 中）来追踪进程运行记账：</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sched_entity</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">load_weight</span>	<span class="title">load</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rb_node</span>		<span class="title">run_node</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>	<span class="title">group_node</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> 		on_rq;</span><br><span class="line">    u64					exec_start;</span><br><span class="line">    u64					sum_exec_runtime;</span><br><span class="line">    u64					vruntime;</span><br><span class="line">    u64					prev_sum_exec_runtime;</span><br><span class="line">    u64					last_wakelap;</span><br><span class="line">    u64					avg_overlap;</span><br><span class="line">    u64					nr_migrations;</span><br><span class="line">    u64					start_runtime;</span><br><span class="line">    u64					avg_wakeup;</span><br><span class="line">    <span class="comment">/* 这里省略很多统计量，只有设置了 CONFIG_SCHEDSTATS 时才启用这些变量 */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p> 调度器实体结构作为进程描述符 struct task_struct 中的一个名为 se 的成员变量。</p>
+</li>
+<li><p>虚拟实时</p>
+<p> vruntime 变量存放进程的虚拟运行时间，该运行时间的计算是经过了所有可运行进程总数的标准化，以ns为单位。CFS 使用 vruntime 变量来记录一个程序到底运行了多长时间以及它还应该再运行多久。</p>
+<p> 定义在<code>kernel/sched_fair.c</code>文件中的 update_curr() 函数实现了该记账功能：</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">update_curr</span><span class="params">(<span class="keyword">struct</span> cfs_rq *cfs_rq)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sched_entiry</span> *<span class="title">curr</span> =</span> cfs_rq-&gt;curr;</span><br><span class="line">    u64 now = rq_of(cfs_rq)-&gt;clock;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> delta_exec;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (unlikely(!curr))</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    <span class="comment">/*获得从最后一次修改负载后当前任务所占用的运行总时间（32位系统不会溢出）*/</span></span><br><span class="line">    delta_exec = (<span class="type">unsigned</span> <span class="type">long</span>)(now -curr-&gt;exec_start);</span><br><span class="line">    <span class="keyword">if</span> (!delta_exec)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    __update_curr(cfs_rq, curr, delta_exec);</span><br><span class="line">    curr-&gt;exec_start = now;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (entity_is_task(curr)) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">curtask</span> =</span> task_of(curr);</span><br><span class="line">        trace_sched_stat_runtime(curtask, delta_exec, curr-&gt;vruntime);</span><br><span class="line">        cpuacct_charge(curtask, delta_exec);</span><br><span class="line">        account_group_exec_runtime(curtask, delta_exec);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Linux</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Linux内核设计与实现//" class="article-tag-list-link color3">Linux内核设计与实现</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2022/11/20/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-进程管理" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -750,6 +1027,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">SQLite</a>
+              </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">Linux</a>

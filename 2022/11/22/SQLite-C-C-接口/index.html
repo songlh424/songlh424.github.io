@@ -6,16 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>Tag: C++ | songlh&#39;s blog</title>
+  <title>SQLite C/C++接口 | songlh&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="代码搬运工">
-<meta property="og:type" content="website">
-<meta property="og:title" content="songlh&#39;s blog">
-<meta property="og:url" content="http://example.com/tags/C/index.html">
+  <meta name="description" content="总结以下两个对象和八个方法构成SQLite接口的基本元素：  sqlite3：数据库连接对象。通过sqlite3_open() 创建，通过sqlite3_close() 销毁 sqlite3_stmt：SQL语句对象。通过sqlite3_prepare() 创建，通过sqlite3_finalize() 销毁 sqlite3_open()：打开新的或现有的SQLite数据库的连接 sqlite3_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQLite C&#x2F;C++接口">
+<meta property="og:url" content="http://example.com/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/index.html">
 <meta property="og:site_name" content="songlh&#39;s blog">
-<meta property="og:description" content="代码搬运工">
+<meta property="og:description" content="总结以下两个对象和八个方法构成SQLite接口的基本元素：  sqlite3：数据库连接对象。通过sqlite3_open() 创建，通过sqlite3_close() 销毁 sqlite3_stmt：SQL语句对象。通过sqlite3_prepare() 创建，通过sqlite3_finalize() 销毁 sqlite3_open()：打开新的或现有的SQLite数据库的连接 sqlite3_">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-11-22T12:39:30.000Z">
+<meta property="article:modified_time" content="2022-11-22T13:54:22.542Z">
 <meta property="article:author" content="songlh">
+<meta property="article:tag" content="SQLite">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="songlh&#39;s blog" type="application/atom+xml">
@@ -152,64 +155,218 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-SQLite-C-C-接口" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/11/14/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/" class="archive-article-date">
-  	<time datetime="2022-11-14T07:45:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-14</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/11/14/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">我的第一篇博客文章</a>
+    <h1 class="article-title" itemprop="name">
+      SQLite C/C++接口
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/" class="archive-article-date">
+  	<time datetime="2022-11-22T12:39:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-11-22</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>以下两个对象和八个方法构成SQLite接口的基本元素：</p>
+<ul>
+<li><code>sqlite3</code>：数据库连接对象。通过<code>sqlite3_open()</code> 创建，通过<code>sqlite3_close()</code> 销毁</li>
+<li><code>sqlite3_stmt</code>：SQL语句对象。通过<code>sqlite3_prepare()</code> 创建，通过<code>sqlite3_finalize()</code> 销毁</li>
+<li><code>sqlite3_open()</code>：打开新的或现有的SQLite数据库的连接</li>
+<li><code>sqlite3_prepare()</code>：将SQL文本编译为字节代码，它将用来完成查询或更新数据库的工作</li>
+<li><code>sqlite3_bind()</code>：将应用程序数据存储到原始SQL语句的参数中</li>
+<li><code>sqlite3_step()</code>：将sqlite3_stmt前进到下一个结果行或完成</li>
+<li><code>sqlite3_column()</code>：当前结果行的列值</li>
+<li><code>sqlite3_finalize()</code>：sqlite3_stmt 对象的析构函数</li>
+<li><code>sqlite3_close()</code>：sqlite3对象的析构函数</li>
+<li><code>sqlite3_exec()</code>：一个包装函数，对一个或多个SQL语句字符串执行 sqlite3_prepare()、sqlite3_step()、sqlite3_column() 和 sqlite3_finalize()。</li>
+</ul>
+<p>SQLite有超过225个API，但是大多数API是可选的，并且非常专业，可以被初学者忽略。核心API小巧，简单易学。</p>
+<h3 id="核心对象和接口"><a href="#核心对象和接口" class="headerlink" title="核心对象和接口"></a>核心对象和接口</h3><p>SQL数据库引擎的主要任务是评估SQL语句，为此，开发人员需要两个对象：</p>
+<ul>
+<li>该数据库连接对象：sqlite3</li>
+<li>准备好的SQL语句对象：sqlite3_stmt</li>
+</ul>
+<p>严格来说，并不需要SQL语句对象，因为可以使用便捷包装器接口 sqlite3_exec 或sqlite3_get_table，这些包装器封装并隐藏了SQL语句对象。</p>
+<p>核心接口摘要：</p>
+<ul>
+<li><code>sqlite3_open()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_open</span> <span class="params">(</span></span><br><span class="line"><span class="params">	<span class="type">const</span> <span class="type">char</span> *文件名,	<span class="comment">/* 数据库文件名(UTF-8) */</span></span></span><br><span class="line"><span class="params">    sqlite3 **ppDb		<span class="comment">/* 传出参数：SQLite数据库句柄 */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br><span class="line"><span class="comment">// 成功打开（和/或创建）数据库，返回SQLITE_OK，否则返回错误编码</span></span><br></pre></td></tr></table></figure>
+
+<p>该接口打开SQLite数据库文件的连接，并返回数据库连接对象。这通常是应用程序进行的第一个SQLite API调用，并且是大多数其他API的前提。</p>
+<ul>
+<li><code>sqlite3_prepare()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_prepare</span> <span class="params">(</span></span><br><span class="line"><span class="params">	sqlite3 *db,	<span class="comment">/* 数据库句柄 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> *zSql,	<span class="comment">/* SQL语句，UTF-8编码 */</span></span></span><br><span class="line"><span class="params">    <span class="type">int</span> nByte,	<span class="comment">/* zSql的最大长度，以字节为单位 */</span></span></span><br><span class="line"><span class="params">    sqlite3_stmt **ppStmt,	<span class="comment">/* 传出参数：语句句柄 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> **pzTail	<span class="comment">/* 传出参数：指向zSql未使用部分的指针 */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br><span class="line"><span class="comment">// 成功返回SQLITE_OK，否则返回错误编码</span></span><br></pre></td></tr></table></figure>
+
+<p>将每一个SQL语句视为一个小型计算机程序，sqlite3_prepare() 的目的是将该程序编译为目标代码，然后 sqlite3_step() 接口运行目标代码以获取结果。</p>
+<ul>
+<li><code>sqlite3_step()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_step</span> <span class="params">(sqlite3_stmt *)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果正在执行的SQL语句返回任何数据，则每次准备好调用者处理新的数据行时，都将返回 SQLITE_ROW。可以使用列访问功能访问这些值，再次调用 sqlite3_step() 检索下一行数据。不返回结果的语句（如INSERT、UPDATE或DELETE语句）在单次调用时便运行完毕。</p>
+<ul>
+<li><code>sqlite3_column()</code></li>
+</ul>
+<p>该接口从结果集的当前行返回一个单列，可以多次调用此接口来查找该行所有列的值。</p>
+<p>实际上，这并不是SQLite中的API，而是代表整个函数系列的占位符</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">void</span> *<span class="title function_">sqlite3_column_blob</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">double</span> <span class="title function_">sqlite3_column_double</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_int</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line">sqlite3_int <span class="number">64</span> sqlite3_column_int64(sqlite3_stmt *, <span class="type">int</span> iCol);</span><br><span class="line"><span class="type">const</span> <span class="type">unsigned</span> <span class="type">char</span> *<span class="title function_">sqlite3_column_text</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">void</span> *<span class="title function_">sqlite3_column_text16</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line">sqlte3_value *<span class="title function_">sqlite3_column_value</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_bytes</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_bytes16</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_column_type</span><span class="params">(sqlite3_stmt *, <span class="type">int</span> iCol)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>sqlite3_finalize()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_finalize</span><span class="params">(sqlite3_stmt *pStmt)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>必须使用此接口销毁每个SQL语句对象，以避免内存泄漏。</p>
+<ul>
+<li><code>sqlite3_close()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_close</span><span class="params">(sqlite3 *)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>关闭数据连接。</p>
+<ul>
+<li><code>sqlite3_exec()</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sqlite3_exec</span> <span class="params">(</span></span><br><span class="line"><span class="params">	sqlite3 *,	<span class="comment">/* 一个打开的数据库 */</span></span></span><br><span class="line"><span class="params">    <span class="type">const</span> <span class="type">char</span> *sql,	<span class="comment">/* 要求值的SQL */</span></span></span><br><span class="line"><span class="params">    <span class="type">int</span> (*callback)(<span class="type">void</span> *, <span class="type">int</span>, <span class="type">char</span> **, <span class="type">char</span> **), <span class="comment">/* 回调函数 */</span></span></span><br><span class="line"><span class="params">    <span class="type">void</span> *,	<span class="comment">/* 回调函数的第一个参数 */</span></span></span><br><span class="line"><span class="params">    <span class="type">char</span> **errmsg	<span class="comment">/* 此处写的错误msg */</span></span></span><br><span class="line"><span class="params">)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>该API在作为第一个参数传入的数据库连接的上下文中，运行零个或多个以UTF-8编码的、以分号分隔的SQL语句，并将其传递给第二个参数。如果第三个参数的回调函数不为NULL，则及那个从SQL语句得到的每个结果行调用该函数。第4个参数将中继到每个回调函数的第一个参数。如果传入SQL语句时发生了错误，则当前语句停止执行，随后的语句将被跳过，如果第5个参数不为NULL，则任何错误消息都会写入从sqlite3_malloc() 获得的内存中，并通过第5个参数传递回去。</p>
+<p>回调函数的第2个参数是结果中的列数，第三个参数是一个数组指针，该数组指向从 sqlite3_column_text() 获得的字符串。如果结果行的元素为NULL，则回调的相应字符串指针为NULL指针。第4个参数是指向字符串的指针数组，其中每个条目表示从 sqlite3_column_name() 获得的相应结果列的名称。</p>
+<h3 id="配置SQLite"><a href="#配置SQLite" class="headerlink" title="配置SQLite"></a>配置SQLite</h3><p>SQLite的默认配置适用于大多数应用程序，但是有时候开发人员想要调整设置，以尝试提高性能，或者利用一些晦涩的功能。</p>
+<p>sqlite3_config() 接口用来修改配置，在创建任何数据库连接之前，必须调用该接口。该接口允许程序员做以下事情：</p>
+<ul>
+<li>调整SQLite进行内存分配的方式，包括设置适用于安全关键的实时嵌入式系统和应用程序定义的内存分配器的备用内存分配器</li>
+<li>设置整个过程的错误日志</li>
+<li>指定应用程序定义的页面缓存</li>
+<li>调整互斥锁的使用，以使其适合于各种线程模型，或替换应用程序定义的互斥锁系统。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">C++</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">SQLite</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2022/11/22/SQLite-C-C-%E6%8E%A5%E5%8F%A3/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2022/11/20/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">进程调度</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -232,9 +389,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
