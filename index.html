@@ -164,6 +164,219 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-再读C-Primer" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/07/10/%E5%86%8D%E8%AF%BBC-Primer/">再读C++ Primer</a>
+    </h1>
+  
+
+        
+        <a href="/2023/07/10/%E5%86%8D%E8%AF%BBC-Primer/" class="archive-article-date">
+  	<time datetime="2023-07-10T12:19:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><ol>
+<li><p>C++语言并未定义任何输入输出语句，取而代之是包含一个全面的标准库来提供IO机制。C++主要使用<code>iostream</code>库，包含两个基础类型<code>istream</code>和<code>ostream</code>，分别表示输入流和输出流。</p>
+<p> 标准库定义了4个IO对象，为<code>cin</code>、<code>cout</code>、<code>cerr</code>、<code>clog</code>。</p>
+</li>
+<li><p><strong>读取数量不定的输入数据</strong>：</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(cin &gt;&gt; value) &#123;</span><br><span class="line">    ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 当使用一个<code>istream</code>对象作为条件，其效果是检测流的状态。如果流是有效的，即流未遇到错误，那么检测成功。当遇到文件结束符，或一个无效输入时，istream对象的状态变为无效。处于无效状态的istream对象会使条件变为假。</p>
+</li>
+</ol>
+<h2 id="变量和基本类型"><a href="#变量和基本类型" class="headerlink" title="变量和基本类型"></a>变量和基本类型</h2><ol>
+<li><p>大多数编译器上，<code>float</code>4Bytes，7位有效位；<code>double</code>8字节，16位有效位。</p>
+</li>
+<li><p><strong>选择类型的经验准则</strong>：</p>
+<ul>
+<li>明确数值不可能为负就选用无符号类型。</li>
+<li>使用int执行整数运算，long一般和int一样尺寸，超过了int表示范围应选用long long。</li>
+<li>算术表达式不要使用char或bool，因为char在一些机器上是有符号的，在一些机器上是无符号的。需要表示不大的整数而使用char应明确指出<code>signed char</code>或<code>unsigned char</code>。</li>
+<li>执行浮点数运算选用double，因为float通常精度不够而且双精度浮点数和单精度浮点数计算代价相差无几。事实上默写机器双精度甚至比单精度快。</li>
+</ul>
+</li>
+<li><p><strong>含无符号类型的表达式</strong>：</p>
+<p> <strong>赋给一个无符号类型</strong>一个超过它表示范围的值时，结果是初始值对无符号类型表示数值总数去模后的余数。<strong>给带符号类型</strong>一个超过它表示范围的值时，结果是<strong>未定义</strong>的，程序可能继续工作、可能崩溃，也可能产生垃圾数据。</p>
+<p> 当一个算术表达式既有无符号数又有int值时，int会转换为无符号数。如果表达式既有带符号数又有无符号数，当带符号类型取值为负时会出现异常结果，这是因为带符号数会自动转为无符号数。</p>
+</li>
+<li><p><strong>字面值</strong>：</p>
+<p> <strong>整形字面值</strong>可写作十进制、八进制（以0开头）或十六进制（以0x开头）的形式。默认情况下，十进制字面值是带符号数，八进制和十六进制字面值既可能是带符号的也可能无符号。</p>
+<p> <strong>浮点型字面值</strong>表现为一个小数或以科学计数法表示的指数，其中指数部分用E或e标识。是double类型。</p>
+<p> 单引号括起来的一个字符称为<strong>字符型字面值</strong>，双引号括起来的零个或多个字符则构成<strong>字符串型字面值</strong>。字符串字面值的类型实际上是由常量字符构成的数组。编译器在每个字符串的结尾处添加一个空字符（’\0’）。</p>
+<p> 如果两个字符串字面值<strong>位置紧邻且仅由空格、缩进和换行符分隔</strong>，则它们实际上是一个整体。</p>
+</li>
+<li><p><strong>指定字面值的类型</strong>：</p>
+<p> 通过添加如表中所列的前缀和后缀，可以改变整形、浮点型和字符型字面值的默认类型。</p>
+ <center><font color='blue' size="2">字符和字符串字面值</font></center>
+
+<table>
+<thead>
+<tr>
+<th>前缀</th>
+<th>含义</th>
+<th>类型</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u</td>
+<td>Unicode16字符</td>
+<td>char16_t</td>
+<td>u”hi!”</td>
+</tr>
+<tr>
+<td>U</td>
+<td>Unicode32字符</td>
+<td>char32_t</td>
+<td>U”hi!”</td>
+</tr>
+<tr>
+<td>L</td>
+<td>宽字符</td>
+<td>wchar_t</td>
+<td>L’a’</td>
+</tr>
+<tr>
+<td>u8</td>
+<td>UTF-8(仅用于字符串字面常量)</td>
+<td>char</td>
+<td>u8”hi!”</td>
+</tr>
+</tbody></table>
+ <center><font size="2" color='blue'> 整形字面值</font></center>
+
+<table>
+<thead>
+<tr>
+<th>后缀</th>
+<th>最小匹配类型</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u或U</td>
+<td>unsigned</td>
+<td>42u</td>
+</tr>
+<tr>
+<td>l或L</td>
+<td>long</td>
+<td>42l</td>
+</tr>
+<tr>
+<td>ll或LL</td>
+<td>long long</td>
+<td>42ll</td>
+</tr>
+</tbody></table>
+ <center><font size="2" color='blue'> 浮点型字面值 </font></center>
+
+<table>
+<thead>
+<tr>
+<th>后缀</th>
+<th>类型</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>f或F</td>
+<td>float</td>
+<td>1E-3F</td>
+</tr>
+<tr>
+<td>l或L</td>
+<td>long double</td>
+<td>3.1415L</td>
+</tr>
+</tbody></table>
+<p> true和false是布尔类型的字面值，nullptr是指针字面值。</p>
+</li>
+<li><p><strong>列表初始化</strong>：</p>
+<p> 以下4条语句都可以初始化：</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> units_sold = <span class="number">0</span>;</span><br><span class="line"><span class="type">int</span> units_sold = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"><span class="type">int</span> units_sold&#123;<span class="number">0</span>&#125;;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">units_sold</span><span class="params">(<span class="number">0</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p> 用花括号来初始化变量的初始化形式称为<strong>列表初始化</strong>。当用于内置类型的变量时有一个特点：<strong>如果使用列表初始化且初始值存在丢失信息的风险，则编译期将报错</strong>。</p>
+</li>
+<li><p><strong>默认初始化</strong>：</p>
+<p> 内置类型的变量未被显式初始化，如果变量定义于任何函数体之外的变量被初始化为0.定义在函数体内部的内置类型变量将不被初始化。</p>
+</li>
+<li><p><strong>const限定符</strong>：</p>
+<p> const对象必须初始化，初始值可以是任意复杂的表达式。</p>
+</li>
+<li><p><strong>const的引用</strong>：</p>
+<p> 引用的类型必须与其所引用对象的类型一致，但是有两个例外。第一个例外是初始化常量引用时允许用任意表达式作为初始值，只要该表达式的结果能转换为引用类型即可。</p>
+</li>
+<li><p><strong>顶层const和底层const</strong>：</p>
+<p>顶层const表示指针本身是个常量，底层const表示指针所指的对象是一个常量。</p>
+</li>
+<li><p><strong>constexpr和常量表达式</strong>：</p>
+<p>常量表达式指值不会改变并且在编译过程就能得到计算结果的表达式。</p>
+</li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">C/C++</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/07/10/%E5%86%8D%E8%AF%BBC-Primer/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-C++语言" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -908,80 +1121,6 @@
 
 
   
-    <article id="post-pthread-once使用及在单例模式中应用" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/">pthread_once使用及在单例模式中应用</a>
-    </h1>
-  
-
-        
-        <a href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/" class="archive-article-date">
-  	<time datetime="2023-04-03T03:40:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-03</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="pthread-once-使用"><a href="#pthread-once-使用" class="headerlink" title="pthread_once()使用"></a>pthread_once()使用</h3><p>在多线程环境下，有些事仅需要执行一次，通常当初始化应用程序时，可以比较容易将其放在main函数中，但当你 写一个库时，就不能在main里面初始化了，可以使用<strong>静态初始化</strong>，但使用一次初始化(pthread_once)会比较容易些。</p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
@@ -1100,11 +1239,11 @@ MathJax.Hub.Queue(function() {
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
+                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
+                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1120,7 +1259,7 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1128,7 +1267,7 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
               </li>
             
             <div class="clearfix"></div>

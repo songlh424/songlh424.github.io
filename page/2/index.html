@@ -164,6 +164,80 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-pthread-once使用及在单例模式中应用" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/">pthread_once使用及在单例模式中应用</a>
+    </h1>
+  
+
+        
+        <a href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/" class="archive-article-date">
+  	<time datetime="2023-04-03T03:40:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-03</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="pthread-once-使用"><a href="#pthread-once-使用" class="headerlink" title="pthread_once()使用"></a>pthread_once()使用</h3><p>在多线程环境下，有些事仅需要执行一次，通常当初始化应用程序时，可以比较容易将其放在main函数中，但当你 写一个库时，就不能在main里面初始化了，可以使用<strong>静态初始化</strong>，但使用一次初始化(pthread_once)会比较容易些。</p>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/04/03/pthread-once%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%9C%A8%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E4%B8%AD%E5%BA%94%E7%94%A8/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-muduo源码剖析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1002,11 +1076,11 @@ MathJax.Hub.Queue(function() {
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
+                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
+                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1022,7 +1096,7 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1030,7 +1104,7 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
               </li>
             
             <div class="clearfix"></div>
