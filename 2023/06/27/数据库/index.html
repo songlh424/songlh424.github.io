@@ -16,13 +16,13 @@
 <meta property="og:description" content="MySQLMySQL执行流程是怎样的MySQL架构共分为两层：Server层和存储引擎层。  Server层负责建立连接、分析和执行SQL。主要包括连接器、查询缓存、解析器、预处理器、优化器、执行器等。另外所有内置函数（如日期、时间等）和所有跨存储引擎的功能（如存储过程、触发器、视图等）都在Server层。 存储引擎负责数据的存储和提取。支持InnoDB、MyISAM、Memory等多个存储引擎。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="d:\blog\source_posts\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\image-20230705213811542.png">
-<meta property="og:image" content="d:\Desktop\%E9%9D%A2%E7%BB%8F\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\image-20230412113308313.png">
-<meta property="og:image" content="d:\blog\source\_posts\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\243b1466779a9e107ae3ef0155604a17.png">
-<meta property="og:image" content="d:\blog\source\_posts\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\261011d237bec993821aa198b97ae8ce.png">
+<meta property="og:image" content="d:\blog\source_posts\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\image-20230412113308313.png">
+<meta property="og:image" content="http://songlh424.github.io/2023/06/27/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%95%B0%E6%8D%AE%E9%A1%B5.png">
+<meta property="og:image" content="http://songlh424.github.io/2023/06/27/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%95%B0%E6%8D%AE%E5%BA%93/261011d237bec993821aa198b97ae8ce-1689044013625.png">
 <meta property="og:image" content="d:\Desktop\%E9%9D%A2%E7%BB%8F\%E6%95%B0%E6%8D%AE%E5%BA%93.assets\image-20230412185737286.png">
 <meta property="og:image" content="https://cdn.xiaolincoding.com//mysql/other/9fa26a74965efbf0f56b707a03bb9b7f.png">
 <meta property="article:published_time" content="2023-06-27T15:40:31.000Z">
-<meta property="article:modified_time" content="2023-07-05T15:59:26.623Z">
+<meta property="article:modified_time" content="2023-07-11T03:44:21.946Z">
 <meta property="article:author" content="songlh">
 <meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary">
@@ -307,12 +307,12 @@
 <h3 id="优化索引的方法"><a href="#优化索引的方法" class="headerlink" title="优化索引的方法"></a>优化索引的方法</h3><h4 id="前缀索引优化"><a href="#前缀索引优化" class="headerlink" title="前缀索引优化"></a>前缀索引优化</h4><p>前缀索引就是使用字符串的前几个字符建立索引</p>
 <p>使用前缀索引是为了减小索引字段大小，可以增加一个索引页中存储的索引值。</p>
 <p><strong>局限性</strong>：<code>order by</code>无法使用前缀索引；无法把前缀索引用作覆盖索引。</p>
-<h4 id="覆盖索引优化"><a href="#覆盖索引优化" class="headerlink" title="覆盖索引优化"></a>覆盖索引优化</h4><p><strong>覆盖索引</strong>：在二级索引的B+ Tree就能查询到的过程就叫做<strong>覆盖索引</strong>。</p>
-<h4 id="主键索引最好是递增的"><a href="#主键索引最好是递增的" class="headerlink" title="主键索引最好是递增的"></a>主键索引最好是递增的</h4><p><strong>使用自增主键</strong>，<strong>每次插入的新数据就会按顺序添加到当前索引节点的位置</strong>，不需要移动数据，当页面写满时，就会自动开辟一个新页面。</p>
-<p><strong>使用非自增主键</strong>，可能需要移动数据的位置，甚至需要从一个页面复制到数据到另外一个页面，这种情况下称为<strong>页分裂</strong>。<strong>页分裂有可能造成大量的内存碎片，导致索引结构不紧凑，影响查询效率</strong>。</p>
+<h4 id="覆盖索引优化"><a href="#覆盖索引优化" class="headerlink" title="覆盖索引优化"></a>覆盖索引优化</h4><p><strong>覆盖索引</strong>：在二级索引的B+ Tree就能查询获取到所要数据的过程就叫做<strong>覆盖索引</strong>。</p>
+<h4 id="主键索引最好是递增的"><a href="#主键索引最好是递增的" class="headerlink" title="主键索引最好是递增的"></a>主键索引最好是递增的</h4><p><strong>使用自增主键</strong>，<strong>每次插入的新数据就会按顺序添加</strong>，不需要移动数据，当页面写满时，就会自动开辟一个新页面。</p>
+<p><strong>使用非自增主键</strong>，可能需要移动数据的位置，甚至需要从一个页面复制到数据到另外一个页面，导致<strong>页分裂</strong>。<strong>页分裂有可能造成大量的内存碎片，导致索引结构不紧凑，影响查询效率</strong>。</p>
 <p>另外主键字段长度不要太大，因为<strong>主键长度越小，意味着二级索引的叶子节点越小，这样二级索引占用空间也越小</strong>。</p>
 <h4 id="索引最好设置NOT-NULL"><a href="#索引最好设置NOT-NULL" class="headerlink" title="索引最好设置NOT NULL"></a>索引最好设置NOT NULL</h4><ul>
-<li>索引列存在NULL会导致优化器在做索引选择的时候更加复杂，更加难以优化，因为含NULL列会使索引、索引统计和值比较都更复杂，必须进行索引统计时，count会省略值为NULL的行。</li>
+<li>索引列存在NULL会导致<strong>优化器在做索引选择</strong>的时候更加复杂，更加难以优化，因为含NULL列会使索引、索引统计和值比较都更复杂，必须进行索引统计时，count会省略值为NULL的行。</li>
 <li>NULL值是一个无意义的值，但会占用物理空间，所以会带来存储空间的问题，因为InnoDB存储记录的时候，如果表中存在允许为NULL，那么行格式中至少会用1字节空间存储NULL值列表。</li>
 </ul>
 <h4 id="防止索引失效"><a href="#防止索引失效" class="headerlink" title="防止索引失效"></a>防止索引失效</h4><p>索引失效情况：</p>
@@ -330,7 +330,7 @@
 </li>
 </ul>
 <p>通过explain获取执行计划：</p>
-<p><img src="D:\Desktop\面经\数据库.assets\image-20230412113308313.png" alt="image-20230412113308313"></p>
+<p><img src="D:\blog\source_posts\数据库.assets\image-20230412113308313.png" alt="image-20230412113308313"></p>
 <p>参数有：</p>
 <ul>
 <li>possible_keys字段表示可能用到的索引</li>
@@ -363,11 +363,11 @@
 </blockquote>
 <h3 id="InnoDB如何存储数据的"><a href="#InnoDB如何存储数据的" class="headerlink" title="InnoDB如何存储数据的"></a>InnoDB如何存储数据的</h3><p><strong>InnoDB的数据是按【数据页】为单位读写的</strong>，数据库的I&#x2F;O操作的最小单位是页，<strong>InnoDB数据页的默认大小是16KB</strong>。</p>
 <p>数据页结构图：</p>
-<img src="D:\blog\source\_posts\数据库.assets\243b1466779a9e107ae3ef0155604a17.png" alt="图片" style="zoom: 33%;" />
+<img src="/2023/06/27/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%95%B0%E6%8D%AE%E9%A1%B5.png" class="" title="数据页">
 
 <p>文件头中有两个指针将数据页以双向链表的结构管理。</p>
 <p>数据页中的细节图：</p>
-<img src="D:\blog\source\_posts\数据库.assets\261011d237bec993821aa198b97ae8ce.png" alt="图片" style="zoom: 33%;" />
+<img src="数据库/261011d237bec993821aa198b97ae8ce-1689044013625.png" alt="图片" style="zoom: 33%;" />
 
 <p><strong>数据页中的记录按照【主键】顺序组成单向链表</strong>，单向链表检索效率低，数据页有一个<strong>页目录</strong>。数据会被分组，<strong>规定第一个分组的记录能有1条记录，最后一个分组中的记录条数范围只能在1~8条，其余分组记录条数为4 ~ 8条之间</strong>。每个分组最后一条记录的n_owned字段记录了该分组的条数。<strong>页目录由多个槽组成的，槽相当于分组记录的索引，指向每个分组的最后一条记录</strong>。</p>
 <p>查找时可以对槽进行二分查找。</p>
@@ -1164,15 +1164,15 @@ MathJax.Hub.Queue(function() {
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">随笔</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">SQLite</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">C/C++</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1184,15 +1184,15 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">数据库</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
