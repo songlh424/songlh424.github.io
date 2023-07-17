@@ -6,17 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://songlh424.github.io">
-  <title>time相关的C函数 | songlh&#39;s blog</title>
+  <title>C和POSIX提供的Date/Time函数 | songlh&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="time_t用来存储从1970年到现在经过了多少秒。">
+  <meta name="description" content="C++标准库也提供了C和POSIX所提供的“处理date和time”接口，原本在&lt;time.h&gt;内的宏、类型、函数，现在被纳入中。  clock_t用来表现elapsed CPU time，由clock()返回。  clock_t clock(void)：返回clock函数执行起，CPU使用时间，除上宏定义CLOCKS_PER_SEC才能得到秒数">
 <meta property="og:type" content="article">
-<meta property="og:title" content="time相关的C函数">
+<meta property="og:title" content="C和POSIX提供的Date&#x2F;Time函数">
 <meta property="og:url" content="http://songlh424.github.io/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/index.html">
 <meta property="og:site_name" content="songlh&#39;s blog">
-<meta property="og:description" content="time_t用来存储从1970年到现在经过了多少秒。">
+<meta property="og:description" content="C++标准库也提供了C和POSIX所提供的“处理date和time”接口，原本在&lt;time.h&gt;内的宏、类型、函数，现在被纳入中。  clock_t用来表现elapsed CPU time，由clock()返回。  clock_t clock(void)：返回clock函数执行起，CPU使用时间，除上宏定义CLOCKS_PER_SEC才能得到秒数">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2023-04-16T04:32:09.000Z">
-<meta property="article:modified_time" content="2023-06-22T08:36:12.196Z">
+<meta property="article:published_time" content="2023-04-16T04:32:00.000Z">
+<meta property="article:modified_time" content="2023-07-17T15:54:59.094Z">
 <meta property="article:author" content="songlh">
 <meta property="article:tag" content="随笔">
 <meta name="twitter:card" content="summary">
@@ -172,34 +172,156 @@
         
   
     <h1 class="article-title" itemprop="name">
-      time相关的C函数
+      C和POSIX提供的Date/Time函数
     </h1>
   
 
         
         <a href="/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/" class="archive-article-date">
-  	<time datetime="2023-04-16T04:32:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-16</time>
+  	<time datetime="2023-04-16T04:32:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-16</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><code>time_t</code>用来存储从1970年到现在经过了多少秒。</p>
+        <p>C++标准库也提供了C和POSIX所提供的“处理date和time”接口，原本在&lt;time.h&gt;内的宏、类型、函数，现在被纳入<ctime>中。</p>
+<ul>
+<li><p><code>clock_t</code>用来表现elapsed CPU time，由clock()返回。</p>
+</li>
+<li><p><code>clock_t clock(void)</code>：返回clock函数执行起，CPU使用时间，除上宏定义<code>CLOCKS_PER_SEC</code>才能得到秒数</p>
+</li>
+</ul>
 <span id="more"></span>
 
+
+
+<ul>
+<li><code>time_t</code>用来存储从1970年到现在经过了多少秒。</li>
+<li><code>time_t time(time_t*)</code>：指针可为NULL或0时得到当前日历时间（从1970-01-01 00:00:00到现在的秒数）, 指针如果不为空，会将值存入指针中。</li>
+<li><code>double difftime(time_t, time_t)</code>：用于计算两个time_t变量的差值，返回double类型。</li>
+<li><code>char* ctime(const time_t*)</code>：转换为time_t成为一个标准日历时间字符串，并且考虑时区。返回包含可读格式的日期和时间信息（w m dd hh:mm:ss yyyy）,w表示星期几，m是字母表示的月份，dd表示月中的第几天，hh:mm:ss表示时间，yyyy表示年份。</li>
+</ul>
 <p>如果想更精准，可以用结构<code>struct timeval</code>表示，精准到微妙：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> &#123;</span></span><br><span class="line">    <span class="type">long</span> tv_sec;	<span class="comment">//秒</span></span><br><span class="line">    <span class="type">long</span> tv_usec;	<span class="comment">//微妙</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
 
 <p><code>struct tm</code>用来保存时间和日期的结构：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tm</span> &#123;</span></span><br><span class="line">    <span class="type">int</span> tm_sec;	<span class="comment">//秒，0-59</span></span><br><span class="line">    <span class="type">int</span> tm_min;	<span class="comment">//分，0-59</span></span><br><span class="line">    <span class="type">int</span> tm_hour;<span class="comment">//时，0-23</span></span><br><span class="line">    <span class="type">int</span> tm_mday;<span class="comment">//月中第几天，1-31</span></span><br><span class="line">    <span class="type">int</span> tm_mon;	<span class="comment">//月，0-11</span></span><br><span class="line">    <span class="type">int</span> tm_year;<span class="comment">//自1900年起的年数</span></span><br><span class="line">    <span class="type">int</span> tm_wday;<span class="comment">//周中第几天，0-6</span></span><br><span class="line">    <span class="type">int</span> tm_yday;<span class="comment">//年中第几天，0-365</span></span><br><span class="line">    <span class="type">int</span> tm_isdst;<span class="comment">//夏令时</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-
-
-<p><code>clock_t clock(void)</code>：返回clock函数执行起，处理器时钟所使用的时间。</p>
-<p><code>time_t time(time_t *timer)</code>：timer&#x3D;NULL时得到当前日历时间（从1970-01-01 00:00:00到现在的秒数）,timer为一个时间数值时，用于设置日历时间。</p>
-<p><code>struct tm *localtime(const time_t *timer)</code>：使用timer的值来填充tm结构体，用本时区表示。</p>
-<p><code>char *ctime(const time_t *timer)</code>——返回一个表示当地时间的C字符串。返回包含可读格式的日期和时间信息（w m dd hh:mm:ss yyyy）,w表示星期几，m是字母表示的月份，dd表示月中的第几天，hh:mm:ss表示时间，yyyy表示年份。</p>
+<ul>
+<li><p><code>tm* localtime(const time_t*)</code>：转换time_t为struct tm，考虑时区。</p>
+</li>
+<li><p><code>tm* gmtime(const time_t*)</code>：转换time_t为struct tm，不考虑时区，使用格林尼治时间（GMT）表示</p>
+</li>
+<li><p><code>char* asctime(const tm*)</code>：转换struct tm成为一个标准日历时间字符串。</p>
+</li>
+<li><p><code>size_t strftime(char* str, size_t maxsize, const char* format, const struct tm*)</code>：转换struct tm成为一个用户自定义的日历时间字符串。str存放转换后的结果，maxsize指定str的最大字符数，format指定转换格式。函数返回复制到str的字符数。</p>
+<p>  格式说明符如下：</p>
+<table>
+<thead>
+<tr>
+<th>说明符</th>
+<th>替换为</th>
+<th>实例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>%a&#x2F;A</td>
+<td>缩写&#x2F;完整的星期几</td>
+<td>Sun&#x2F;Sunday</td>
+</tr>
+<tr>
+<td>%b&#x2F;B</td>
+<td>缩写&#x2F;完整的月份名称</td>
+<td>Mar&#x2F;March</td>
+</tr>
+<tr>
+<td>%c</td>
+<td>日期和时间表示法</td>
+<td>Sun Aug 19 02:56:02 2012</td>
+</tr>
+<tr>
+<td>%d</td>
+<td>一月中第几天（01~31）</td>
+<td></td>
+</tr>
+<tr>
+<td>%H</td>
+<td>24小时格式的小时（00~23）</td>
+<td></td>
+</tr>
+<tr>
+<td>%i</td>
+<td>12小时格式的小时（01~12）</td>
+<td></td>
+</tr>
+<tr>
+<td>%j</td>
+<td>一年中的第几天（001~366）</td>
+<td>231</td>
+</tr>
+<tr>
+<td>%m</td>
+<td>十进制数表示的月份（01~12）</td>
+<td></td>
+</tr>
+<tr>
+<td>%M</td>
+<td>分（00~59）</td>
+<td></td>
+</tr>
+<tr>
+<td>%p</td>
+<td>AM或PM名称</td>
+<td>PM</td>
+</tr>
+<tr>
+<td>%S</td>
+<td>秒（00~61）</td>
+<td></td>
+</tr>
+<tr>
+<td>%U</td>
+<td>一年中的第几周，以第一个星期日作为第一周的第一天（00~53）</td>
+<td></td>
+</tr>
+<tr>
+<td>%w</td>
+<td>十进制数表示星期几，星期日表示0（0~6）</td>
+<td></td>
+</tr>
+<tr>
+<td>%W</td>
+<td>一年中的第几周，以第一个星期一作为第一周的第一天（00~53）</td>
+<td></td>
+</tr>
+<tr>
+<td>%x</td>
+<td>日期表示法</td>
+<td>08&#x2F;19&#x2F;12</td>
+</tr>
+<tr>
+<td>%X</td>
+<td>时间表示法</td>
+<td>02:50:06</td>
+</tr>
+<tr>
+<td>%y&#x2F;Y</td>
+<td>年份后两个数字&#x2F;完整年份</td>
+<td></td>
+</tr>
+<tr>
+<td>%Z</td>
+<td>时区的名称或缩写</td>
+<td>CDT</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><code>time_t mktime(tm*)</code>：转换struct tm成为一个time_t。</p>
+</li>
+</ul>
 
       
 
@@ -474,15 +596,15 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">数据库</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>

@@ -917,20 +917,26 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/">time相关的C函数</a>
+      <a class="article-title" href="/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/">C和POSIX提供的Date/Time函数</a>
     </h1>
   
 
         
         <a href="/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/" class="archive-article-date">
-  	<time datetime="2023-04-16T04:32:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-16</time>
+  	<time datetime="2023-04-16T04:32:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-16</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><code>time_t</code>用来存储从1970年到现在经过了多少秒。</p>
+        <p>C++标准库也提供了C和POSIX所提供的“处理date和time”接口，原本在&lt;time.h&gt;内的宏、类型、函数，现在被纳入<ctime>中。</p>
+<ul>
+<li><p><code>clock_t</code>用来表现elapsed CPU time，由clock()返回。</p>
+</li>
+<li><p><code>clock_t clock(void)</code>：返回clock函数执行起，CPU使用时间，除上宏定义<code>CLOCKS_PER_SEC</code>才能得到秒数</p>
+</li>
+</ul>
         
       
 
@@ -1122,15 +1128,15 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">数据库</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
