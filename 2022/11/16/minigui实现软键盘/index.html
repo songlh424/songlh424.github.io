@@ -15,12 +15,12 @@
 <meta property="og:site_name" content="songlh&#39;s blog">
 <meta property="og:description" content="MiniGUI原输入法消息接口MiniGUI在其开源版本的libminigui-1.3.3中提供了一个基于PC标准键盘输入的输入法。但是在开源版本libminigui-1.6.10以后删除了该模块，但其输入法接口依然与libminigui-1.3.3完全一致。该输入法支持标准PC键盘的汉字和英文字母输入，但是对于特殊字符和特殊键盘输入或者鼠标软键盘输入的情况，MiniGUI则不支持。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="d:\blog\source\img\SJSJ201106026_03800.jpg">
+<meta property="og:image" content="http://songlh424.github.io/img/miniGUI.jpg">
 <meta property="article:published_time" content="2022-11-16T03:27:18.000Z">
-<meta property="article:modified_time" content="2023-04-03T01:46:25.638Z">
+<meta property="article:modified_time" content="2023-11-23T16:41:45.302Z">
 <meta property="article:author" content="songlh">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="d:\blog\source\img\SJSJ201106026_03800.jpg">
+<meta name="twitter:image" content="http://songlh424.github.io/img/miniGUI.jpg">
   
     <link rel="alternative" href="/atom.xml" title="songlh&#39;s blog" type="application/atom+xml">
   
@@ -243,8 +243,7 @@
 <li><p>拦截MSG_CHAR消息实现特定输入法转换，并将转换结果通过MSG_CHAR消息发送到当前活动的目标窗口</p>
 </li>
 <li><p>处理输入法打开消息MSG_IME_OPEN和输入法关闭消息MSG_IME_CLOSE，再切换到需要输入法的活动窗口时自动显示输入法窗口。该主窗口将在启动之后，首先将自己注册为输入法窗口（*__mg_ime_wnd*）。这样，MiniGUI的desktop就知道首先要将按键信息发送到这个主窗口之中，而不是当前的活动主窗口。当活动主窗口发生变化时，desktop会通知输入法窗口当前的活动窗口的句柄。这样，当输入法窗口接收到按键消息并且翻译为适当的字符之后，就可以将其发送到当前的活动窗口。</p>
-<img src="D:\blog\source\img\SJSJ201106026_03800.jpg" alt="MiniGUI原输入法消息处理流程" style="zoom: 67%;" />
-
+<p><img src="/../img/miniGUI.jpg" alt="无法显示"></p>
 <h4 id="输入法模块与编辑控件间关键消息处理"><a href="#输入法模块与编辑控件间关键消息处理" class="headerlink" title="输入法模块与编辑控件间关键消息处理"></a>输入法模块与编辑控件间关键消息处理</h4><p>增加几个消息需要在sledit控件的消息处理回调函数中使用，因为sledit这个控件是所有字符输入的基础控件。在sledit控件的鼠标左键按下MSG_LBUTTONDOWN和MSG_SETFOCUS控件聚焦两个消息的处理部分，将该控件的HWND句柄和起始坐标发送到主IME窗口，其实现代码如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_SETFOCUS:</span><br><span class="line">  &#123;</span><br><span class="line">	RECT rcClt = GetClientRect(hWnd, &amp;rcClt);<span class="comment">//客户区</span></span><br><span class="line">      WORD nImeLeft = rcClt.left;<span class="comment">//客户区左坐标</span></span><br><span class="line">      WORD nImeBottom = rcClt.top;<span class="comment">//客户区下坐标</span></span><br><span class="line">      ClientToScreen(hWnd, (<span class="type">int</span> *)&amp;nImeLeft, (<span class="type">int</span> *)&amp;nImeBottom);<span class="comment">//将客户区坐标转换成屏幕坐标</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETTARGET,(WPARAM)hWnd, <span class="number">0</span>);<span class="comment">//通知IME活动HWND句柄</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETSUBPOS, MAKELONG(nImeLeft, nImeBottom), <span class="number">0</span>);</span><br><span class="line">      ......(实现控件聚焦绘制);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
 
@@ -519,15 +518,15 @@ MathJax.Hub.Queue(function() {
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">数据库</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">计算机网络</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
