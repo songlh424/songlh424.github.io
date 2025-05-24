@@ -176,7 +176,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2025/05/24/c-%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B01/" class="post-title-link" itemprop="url">c-相关笔记1</a>
+            <a href="/2025/05/24/c-%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B01/" class="post-title-link" itemprop="url">c-相关笔记</a>
         </h2>
 
         <div class="post-meta" style="text-align: left;">
@@ -187,7 +187,7 @@
               
               
 
-              <time title="创建时间：2025-05-24 15:39:20 / 修改时间：15:44:24" itemprop="dateCreated datePublished" datetime="2025-05-24T15:39:20+08:00">2025-05-24</time>
+              <time title="创建时间：2025-05-24 15:39:20 / 修改时间：16:32:31" itemprop="dateCreated datePublished" datetime="2025-05-24T15:39:20+08:00">2025-05-24</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -211,28 +211,9 @@
 
       
           <h2 id="Effective-C"><a href="#Effective-C" class="headerlink" title="Effective C++"></a>Effective C++</h2><h4 id="换掉-define"><a href="#换掉-define" class="headerlink" title="换掉#define"></a>换掉#define</h4><p>#define是在预编译阶段替换，对应变量名不会进入记号表，还会导致代码膨胀。<strong>应用const代替</strong>。</p>
-<h2 id="Effective-STL"><a href="#Effective-STL" class="headerlink" title="Effective STL"></a>Effective STL</h2><h4 id="容器选择"><a href="#容器选择" class="headerlink" title="容器选择"></a>容器选择</h4><ol>
-<li>许多string的实现使用了引用计数，rope(重型string)实现也是基于引用计数的。介意引用计数的考虑<code>vector&lt;char&gt;</code>。</li>
-<li>对插入和删除操作需要事务语义的就要使用<strong>基于节点</strong>的容器。如果对多个元素的插入操作需要事务语义，则选择list。</li>
-<li>string是STL中在swap过程中唯一导致迭代器、指针和引用变无效的容器。</li>
-</ol>
-<h4 id="使用empty"><a href="#使用empty" class="headerlink" title="使用empty"></a>使用empty</h4><p>empty对所有的标准容器都是常数时间操作，而size对于list来说会耗费线性时间，这时因为list所独有的链接（splice）操作。</p>
-<h4 id="区间成员函数"><a href="#区间成员函数" class="headerlink" title="区间成员函数"></a>区间成员函数</h4><p>使用区间成员函数，通常可以少写一些代码，会得到意图清晰和更加直接的代码。能得到更好的性能（函数调用次数、元素移动、内存分配次数）。所有容器都有类似下面的区间成员函数：</p>
-<ul>
-<li>区间创建：<code>container::container(InputIterator begin, InputIterator end);</code></li>
-<li>区间插入：<code>void container::insert(iterator position, InputIterator begin, InputIterator end);</code></li>
-<li>区间删除：<code>iterator container::erase(iterator begin, iterator end);</code></li>
-<li>区间赋值：<code>void container::assign(InputIterator begin, InputIterator end);</code></li>
-</ul>
-<h4 id="编译器烦人的分析机制"><a href="#编译器烦人的分析机制" class="headerlink" title="编译器烦人的分析机制"></a>编译器烦人的分析机制</h4><p>C++的一条普遍规律——<strong>尽可能地解释为函数声明</strong>。例如</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Widget</span>&#123;...&#125;</span><br><span class="line"><span class="function">Widget <span class="title">w</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>此时，没有声明为w的Widget，而是声明了一个名为w的函数，该函数不带任何参数。</p>
-<h4 id="使用swap除去多余容量"><a href="#使用swap除去多余容量" class="headerlink" title="使用swap除去多余容量"></a>使用swap除去多余容量</h4><p><code>vector&lt;Contestant&gt;(contestants).swap(contestants);</code>——先创建一个临时变量，它是contestants的拷贝，vector的拷贝构造函数只为所拷贝的元素分配所需要的内存，这样实现出去多余容量。同样适用于string。</p>
-<h4 id="避免使用vector-lt-bool-gt"><a href="#避免使用vector-lt-bool-gt" class="headerlink" title="避免使用vector&lt;bool&gt;"></a>避免使用<code>vector&lt;bool&gt;</code></h4><p><code>vector&lt;bool&gt;</code>是一个假容器，并不真的存储bool，而实际上bool仅占一个二进制位。因此<code>vector&lt;bool&gt;::operator[]</code>没办法返回一个指向单个位的引用。故需返回一个对象，这个对象表现得像是一个指向单个位的引用，即代理对象。</p>
-<p>可以用<code>deque&lt;bool&gt;</code>和<code>bitset</code>来替代。</p>
-<h4 id="关联容器的比较函数"><a href="#关联容器的比较函数" class="headerlink" title="关联容器的比较函数"></a>关联容器的比较函数</h4><p>自定义关联容器的比较函数时，应该在等值情况下返回false。</p>
-
+          <!--noindex-->
+          <!--/noindex-->
+        
       
     </div>
 
