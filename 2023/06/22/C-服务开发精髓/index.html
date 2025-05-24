@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"songlh424.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="C++ 必知必会RAII习惯用法一般场景中，会出现先分配资源，再进行相关操作，在任意步骤出错时都对相应的资源进行回收，如果中间步骤没有出错，则在资源使用完毕后对其回收。例如：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++服务开发精髓">
+<meta property="og:url" content="http://songlh424.github.io/2023/06/22/C-%E6%9C%8D%E5%8A%A1%E5%BC%80%E5%8F%91%E7%B2%BE%E9%AB%93/index.html">
+<meta property="og:site_name" content="blogs">
+<meta property="og:description" content="C++ 必知必会RAII习惯用法一般场景中，会出现先分配资源，再进行相关操作，在任意步骤出错时都对相应的资源进行回收，如果中间步骤没有出错，则在资源使用完毕后对其回收。例如：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="d:/blog/source/_posts/C-服务开发精髓.assets/image-20230707171548860.png">
+<meta property="article:published_time" content="2023-06-22T11:29:27.000Z">
+<meta property="article:modified_time" content="2023-07-08T16:33:46.368Z">
+<meta property="article:author" content="Songlh424">
+<meta property="article:tag" content="C&#x2F;C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="d:/blog/source/_posts/C-服务开发精髓.assets/image-20230707171548860.png">
+
+<link rel="canonical" href="http://songlh424.github.io/2023/06/22/C-%E6%9C%8D%E5%8A%A1%E5%BC%80%E5%8F%91%E7%B2%BE%E9%AB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+
+
+
+<link rel="stylesheet" href="/resources/fonts/longcang/LongCang-Regular.css" >
+<link rel="stylesheet" href="/resources/fonts/lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css" >
+
+
+  <title>C++服务开发精髓 | blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://songlh424.github.io/2023/06/22/C-%E6%9C%8D%E5%8A%A1%E5%BC%80%E5%8F%91%E7%B2%BE%E9%AB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Songlh424">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C++服务开发精髓
+        </h1>
+
+        <div class="post-meta" style="text-align: left;">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+
+              <time title="创建时间：2023-06-22 19:29:27" itemprop="dateCreated datePublished" datetime="2023-06-22T19:29:27+08:00">2023-06-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                <time title="修改时间：2023-07-09 00:33:46" itemprop="dateModified" datetime="2023-07-09T00:33:46+08:00">2023-07-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">读书笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="C-必知必会"><a href="#C-必知必会" class="headerlink" title="C++ 必知必会"></a>C++ 必知必会</h2><h3 id="RAII习惯用法"><a href="#RAII习惯用法" class="headerlink" title="RAII习惯用法"></a>RAII习惯用法</h3><p>一般场景中，会出现先分配资源，再进行相关操作，在任意步骤出错时都对相应的资源进行回收，如果中间步骤没有出错，则在资源使用完毕后对其回收。例如：</p>
+<span id="more"></span>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> sockfd = <span class="built_in">socket</span>(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">if</span>(sockfd == <span class="number">-1</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span>(<span class="built_in">bind</span>(sockfd, ..., ...) == - <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="built_in">close</span>(sockfd);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(<span class="built_in">listen</span>(sockfd, <span class="number">5</span>) == <span class="number">-1</span>) &#123;</span><br><span class="line">    <span class="built_in">close</span>(sockfd);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>解决办法：</p>
+<ol>
+<li><p>使用goto语句，一旦某个中间步骤出错，则跳转到统一的清理点进行资源清理操作。</p>
+</li>
+<li><p>使用do…while(0)循环，利用break巧妙将资源回收操作集中到一个地方，使用for循环也能达到同样的效果。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    <span class="type">int</span> sockfd = <span class="built_in">socket</span>(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(sockfd == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">bind</span>(sockfd, ..., ...) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">listen</span>(sockfd, <span class="number">5</span>) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125; <span class="keyword">while</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">if</span>(sockfd != <span class="number">-1</span>) &#123;</span><br><span class="line">    <span class="built_in">close</span>(sockfd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>使用RAII（Resource Acquisition Is Initialization，资源获取即初始化）,资源在构造函数初始化，在析构函数中释放或清理。</p>
+</li>
+</ol>
+<h3 id="pimpl惯用法"><a href="#pimpl惯用法" class="headerlink" title="pimpl惯用法"></a>pimpl惯用法</h3><p>C++中class一般将接口和实现放在一起。如果作为第三方库提供给他人使用，一般要提供<code>.h、.a、.so</code>文件，但大量成员变量和私有函数都暴露了这个类的太多实现细节，很容易让使用者看出其实现原理。</p>
+<p>可以用一个类型Impl的指针取代所有不想暴露的东西，只要在类前对Impl类做前向声明，或将Impl类作为内嵌类，在<code>.cpp</code>文件中实现该类。这种封装方法称为<strong>pimpl惯用法</strong>，即<code>Pointer to Implementation</code>。</p>
+<p>优点：</p>
+<ul>
+<li>核心数据成员被隐藏</li>
+<li>降低了编译依赖</li>
+<li>接口和实现分离</li>
+</ul>
+<p>C++11引入了只能指针，可以使用<code>unique_ptr</code>对象管理Impl指针。</p>
+<h3 id="统一的类成员初始化语法与std-initializer-list-lt-T-gt"><a href="#统一的类成员初始化语法与std-initializer-list-lt-T-gt" class="headerlink" title="统一的类成员初始化语法与std::initializer_list&lt;T&gt;"></a>统一的类成员初始化语法与<code>std::initializer_list&lt;T&gt;</code></h3><p>在C++98/03标准中，允许局部变量这样初始化：<code>int arr[4] = &#123;2, 0, 1, 9&#125;;</code>但是类成员变量只有static const才能用这种初始化。</p>
+<p>C++11中，可以使用花括号对任意类型的变量进行初始化，而不用是static类型。</p>
+<p>如何在自定义类也支持花括号初始化？需要用到C++11引入的对象<code>std::initializer_list&lt;T&gt;</code>，其是模板对象，接收一个自定义参数类型T。</p>
+<p>。。。。</p>
+<h3 id="注解标签"><a href="#注解标签" class="headerlink" title="注解标签"></a>注解标签</h3><p>注解标签语法：<code>[[attribute]] types/functions/enums/etc</code>,可修饰任意类型、函数或枚举类。C++17后也可修饰命名空间和枚举类型。</p>
+<ul>
+<li><p><code>[[noreturn]]</code>：告诉编译期该函数没有返回值,一般用于设计一些系统函数。</p>
+</li>
+<li><p><code>[[deprecated]]</code>：表示函数或类型已被弃用，使用了编译时会给出警告。还可给出编译时具体警告,<code>[[deprecated(&quot;use funY instead&quot;)]] void funcX();</code></p>
+</li>
+<li><p><code>[[fallthrough]]</code>：switch-case中某个case分支没有break语句可能给警告，但有时是开发者故意为之，可在该case语句前加上该标签</p>
+</li>
+<li><p><code>[[nodiscard]]</code>：修饰函数告知函数调用者必须关注该函数的返回值，如果函数调用者未将函数返回值赋值给一个变量会发出一个警告。</p>
+</li>
+<li><p><code>[[maybe_unused]]</code>：编译期会对程序中未使用的函数或变量给出警告，加上该标签可以消除警告或错误。</p>
+</li>
+</ul>
+<h3 id="C-17结构化绑定"><a href="#C-17结构化绑定" class="headerlink" title="C++17结构化绑定"></a>C++17结构化绑定</h3><p>结构体绑定使用语法：<code>auto [a, b, c, ...] = expression;</code>，expression可以是函数调用、花括号表达式或支持结构化绑定的某个类型的变量。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//数组</span></span><br><span class="line"><span class="type">int</span> array[<span class="number">2</span>] = &#123;<span class="number">1</span>, <span class="number">2</span>&#125;;</span><br><span class="line"><span class="keyword">auto</span> [a, b] = array;</span><br><span class="line"><span class="comment">//结构体</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">point</span> &#123;</span><br><span class="line">    <span class="type">int</span> x;</span><br><span class="line">    <span class="type">int</span> y;</span><br><span class="line">&#125;;</span><br><span class="line">point p&#123;<span class="number">1</span>, <span class="number">2</span>&#125;;</span><br><span class="line"><span class="keyword">auto</span> [x, y] = p;</span><br><span class="line"><span class="comment">//map</span></span><br><span class="line">std::map&lt;std::string, <span class="type">int</span>&gt; cities;</span><br><span class="line">cities[<span class="string">&quot;beijing&quot;</span>] = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">auto</span> [cityname, citynumber] : cities)&#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>==注意==：绑定是绑定目标的一份<code>拷贝</code>，绑定类型不是基础类型时如果不想要得到绑定目标的副本则建议使用<code>引用</code>，如果不需要修改绑定目标，建议使用<code>const引用</code>。</p>
+<p><code>const auto&amp; [a, b] = array;</code></p>
+<p>用于结构化绑定的变量不能使用constexpr修饰或声明为static。有些编译器也不支持在lambda表达式捕获列表中使用结构化绑定的语法。</p>
+</blockquote>
+<h3 id="stl容器新增的实用方法"><a href="#stl容器新增的实用方法" class="headerlink" title="stl容器新增的实用方法"></a>stl容器新增的实用方法</h3><p>原位构造：emplace系列函数可以减少一次拷贝构造函数调用，直接在原位直接构造。如<code>emplace_back</code>替换<code>push_back</code>。</p>
+<p>实际开发中会出现一类需求：向某个map中插入元素时需要先检测map中指定的key是否存在，不存在则插入，存在则取来使用；或指定key不存在时插入，存在更新。<br>C++17中，map提供了一个<code>try_emplace</code>方法，该方法会检测指定的key不存在插入，存在什么不做。<br>C++17中，map提供<code>insert_or_assign</code>方法，该方法会检测指定key存在则更新，不存在则插入。</p>
+<h3 id="stl中的智能指针类详解"><a href="#stl中的智能指针类详解" class="headerlink" title="stl中的智能指针类详解"></a>stl中的智能指针类详解</h3><ol>
+<li><p>auto_ptr</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化方式1</span></span><br><span class="line"><span class="function">std::auto_ptr&lt;<span class="type">int</span>&gt; <span class="title">sp1</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(<span class="number">8</span>))</span></span>;</span><br><span class="line"><span class="comment">//初始化方式2</span></span><br><span class="line">std::auto_ptr&lt;<span class="type">int</span>&gt; sp2;</span><br><span class="line">sp<span class="number">2.</span><span class="built_in">reset</span>(<span class="keyword">new</span> <span class="built_in">int</span>(<span class="number">8</span>));</span><br></pre></td></tr></table></figure>
+
+<p> auto_ptr容易让人误用的地方的其不常用的复制语义，即当复制一个auto_ptr对象时，原来的auto_ptr对象所持有的堆内存对象会被转移给复制出来的新auto_ptr对象。如果误用复制前的auto_ptr对象会出错。例如写出<code>vector&lt;auto_ptr&lt;int&gt;&gt; vec1;</code>时操作该容器很难避免不对容器的元素进行赋值传递，会导致容器多个元素被置null。</p>
+<p> C++11抛弃<code>std::auto_ptr</code>，引入<code>std::unique_ptr</code>、<code>std::shared_ptr</code>、<code>std::weak_ptr</code>。</p>
+</li>
+<li><p>unique_ptr</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化方式1</span></span><br><span class="line"><span class="function">std::unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">sp1</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(<span class="number">8</span>))</span></span>;</span><br><span class="line"><span class="comment">//初始化方式2</span></span><br><span class="line">std::unique_ptr&lt;<span class="type">int</span>&gt; sp2;</span><br><span class="line">sp<span class="number">2.</span><span class="built_in">reset</span>(<span class="keyword">new</span> <span class="built_in">int</span>(<span class="number">8</span>));</span><br><span class="line"><span class="comment">//初始化方式3</span></span><br><span class="line">std::unique_ptr&lt;<span class="type">int</span>&gt; sp3 = std::<span class="built_in">make_unique</span>&lt;<span class="type">int</span>&gt;(<span class="number">8</span>);</span><br></pre></td></tr></table></figure>
+
+<p> 应该尽量采用初始化方式3创建unique_ptr对象，因为方式3更安全。</p>
+<p> unique_ptr禁止复制语义，unique_ptr类的拷贝构造函数和赋值运算符均被标记为<code>=delete</code>。</p>
+<p> 虽然禁止复制语义，但可以通过一个函数返回一个std::unique_ptr，这里使用的是<strong>移动构造</strong>。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">sp4</span><span class="params">(std::move(sp1))</span></span>;</span><br><span class="line">std::unique_ptr&lt;<span class="type">int</span>&gt; sp5;</span><br><span class="line">sp5 = std::<span class="built_in">move</span>(sp1);</span><br></pre></td></tr></table></figure>
+
+<p> unique_ptr可以持有一组堆对象：</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_ptr&lt;<span class="type">int</span>[]&gt; <span class="title">sp1</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>[<span class="number">10</span>])</span></span>;</span><br><span class="line"><span class="function">std::unique_ptr&lt;<span class="type">int</span>[]&gt; <span class="title">sp2</span><span class="params">(std::make_unique&lt;<span class="type">int</span>[]&gt;(<span class="number">10</span>))</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p> 可以给智能指针自定义资源回收函数来实现资源回收。unique_ptr的资源释放函数的语法：<code>std::unique_ptr&lt;T, DeletorFuncPtr&gt;</code>.</p>
+</li>
+<li><p>shared_ptr</p>
+<p> shared_ptr持有的资源可以在多个shared_ptr之间共享，资源引用计数表示有多少个share_ptr持有该资源。多个线程之间递增和减少资源的引用计数是安全的（不意味着多个线程同时操作std::shared_ptr管理的资源是安全的）。提供<code>use_count</code>方法获取当前管理的资源引用计数。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化方式1</span></span><br><span class="line"><span class="function">std::shared_ptr&lt;<span class="type">int</span>&gt; <span class="title">sp1</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(<span class="number">8</span>))</span></span>;</span><br><span class="line"><span class="comment">//初始化方式2</span></span><br><span class="line">std::shared_ptr&lt;<span class="type">int</span>&gt; sp2;</span><br><span class="line">sp<span class="number">2.</span><span class="built_in">reset</span>(<span class="keyword">new</span> <span class="built_in">int</span>(<span class="number">8</span>));</span><br><span class="line"><span class="comment">//初始化方式3</span></span><br><span class="line">std::shared_ptr&lt;<span class="type">int</span>&gt; sp3 = std::<span class="built_in">make_shared</span>&lt;<span class="type">int</span>&gt;(<span class="number">8</span>);</span><br></pre></td></tr></table></figure>
+
+<p> 实际开发中有时需要在类中返回包裹当前对象（this）的一个shared_ptr对象给外部使用，只需要继承<code>std::enable_shared_from_this&lt;T&gt;</code>模板对象即可。</p>
+<blockquote>
+<p><code>std::enable_shared_from_this</code>使用注意事项：</p>
+<ol>
+<li>不应该共享栈对象的this指针给智能指针对象。因为智能指针管理的是堆对象。</li>
+<li>std::enable_shared_from_this的循环引用问题。</li>
+</ol>
+</blockquote>
+</li>
+<li><p>weak_ptr</p>
+<p> 是一个不控制资源生命周期的智能指针，是对对象的弱引用，只提供对其管理的资源的一个访问手段。</p>
+<p> weak_ptr可通过另一个weak_ptr或shared_ptr对象构造，shared_ptr可以直接赋值给weak_ptr，也可以通过weak_ptr的lock函数来获得shared_ptr。</p>
+<p> weak_ptr可用来解决shared_ptr相互引用时的死锁问题，即两个shared_ptr相互引用。</p>
+<p> weak_ptr提供<code>expired</code>方法来检测资源是否有效，返回true说明引用资源已失效。</p>
+<p> weak_ptr没有重写<code>operator-&gt;</code>和<code>operator*</code>方法，也没有重写<code>operator bool()</code>操作。</p>
+</li>
+</ol>
+<h2 id="C-后端开发必备的工具和调试知识"><a href="#C-后端开发必备的工具和调试知识" class="headerlink" title="C++后端开发必备的工具和调试知识"></a>C++后端开发必备的工具和调试知识</h2><h3 id="gdb调试"><a href="#gdb调试" class="headerlink" title="gdb调试"></a>gdb调试</h3><ol>
+<li><p>调试时为了能清晰地看到调试的每一行代码、调用的堆栈、变量名、函数名等信息，需要在调试程序中加上调试符号信息，即在gcc/g++编译时需要加上<code>-g</code>选项。</p>
+<p> gdb加载成功后，会显示一行”Reading symbols from/root/…done”信息，表示读取符号文件完毕。</p>
+<p> Linux可以使用<code>strip</code>命令移除某个程序中的调试信息。</p>
+</li>
+<li><p>启动gdb调试方法</p>
+<ol>
+<li><p>直接调试目标程序：<code>gdb filename</code></p>
+</li>
+<li><p>attach到进程：某些情况程序已启动但不想重启程序，可使用ps命令获取该进程的PID，然后<code>gdb attach</code>上去，出现”Attaching to process xxxxx”时说明成功地将gdb attach到目标进程中。</p>
+<p> 使用<code>gdb attach</code>附加上目标进程后，调试器会暂停下来，此时可以使用<code>continue</code>命令让程序继续运行，或者加上相应的断点再继续运行程序</p>
+<p> 结束此次调试且不会进程产生影响，使用<code>detach</code>命令让程序与gdb调试器分离。然后使用<code>quit</code>退出gdb。</p>
+</li>
+<li><p>调试core文件，定位进程崩溃问题，<code>gdb filename corename</code></p>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="gdb常用命令详解–利用gdb调试Redis"><a href="#gdb常用命令详解–利用gdb调试Redis" class="headerlink" title="gdb常用命令详解–利用gdb调试Redis"></a>gdb常用命令详解–利用gdb调试Redis</h3><table>
+<thead>
+<tr>
+<th>命令名称</th>
+<th>命令缩写</th>
+<th>命令说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>run</td>
+<td>r</td>
+<td>运行一个程序</td>
+</tr>
+<tr>
+<td>continue</td>
+<td>c</td>
+<td>让暂停的程序继续运行</td>
+</tr>
+<tr>
+<td>break</td>
+<td>b</td>
+<td>添加断点</td>
+</tr>
+<tr>
+<td>tbreak</td>
+<td>tb</td>
+<td>添加临时断点</td>
+</tr>
+<tr>
+<td>backtrace</td>
+<td>bt</td>
+<td>查看当前线程的调用堆栈</td>
+</tr>
+<tr>
+<td>frame</td>
+<td>f</td>
+<td>切换到当前调用线程的指定堆栈</td>
+</tr>
+<tr>
+<td>info</td>
+<td>info</td>
+<td>查看断点、线程等信息</td>
+</tr>
+<tr>
+<td>enable</td>
+<td>enable</td>
+<td>启用某个断点</td>
+</tr>
+<tr>
+<td>disable</td>
+<td>disable</td>
+<td>禁用某个断点</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>del</td>
+<td>删除断点</td>
+</tr>
+<tr>
+<td>list</td>
+<td>l</td>
+<td>显示源码</td>
+</tr>
+<tr>
+<td>print</td>
+<td>p</td>
+<td>打印或修改变量、寄存器的值</td>
+</tr>
+<tr>
+<td>ptype</td>
+<td>ptype</td>
+<td>查看变量的类型</td>
+</tr>
+<tr>
+<td>thread</td>
+<td>thread</td>
+<td>切换到指定的线程</td>
+</tr>
+<tr>
+<td>next</td>
+<td>n</td>
+<td>运行到下一行</td>
+</tr>
+<tr>
+<td>step</td>
+<td>s</td>
+<td>如果有调用函数则进入调用函数内部</td>
+</tr>
+<tr>
+<td>until</td>
+<td>u</td>
+<td>运行到指定的行停下来</td>
+</tr>
+<tr>
+<td>finish</td>
+<td>fi</td>
+<td>结束当前调用函数到上一层函数调用处</td>
+</tr>
+<tr>
+<td>return</td>
+<td>return</td>
+<td>结束当前调用函数并返回指定的值，到上一层函数调用处</td>
+</tr>
+<tr>
+<td>jump</td>
+<td>j</td>
+<td>将当前程序的执行流跳转到指定的行或地址</td>
+</tr>
+<tr>
+<td>disassemble</td>
+<td>dis</td>
+<td>查看汇编代码</td>
+</tr>
+<tr>
+<td>set args</td>
+<td></td>
+<td>设置程序启动命令行参数</td>
+</tr>
+<tr>
+<td>show args</td>
+<td></td>
+<td>查看设置的命令行参数</td>
+</tr>
+<tr>
+<td>watch</td>
+<td>watch</td>
+<td>监视某个变量或内存地址的值是否发生了变化</td>
+</tr>
+<tr>
+<td>display</td>
+<td>display</td>
+<td>监视的变量或内存地址再程序中断后自动输出监视的变量或内存地址</td>
+</tr>
+<tr>
+<td>dir</td>
+<td>dir</td>
+<td>重定向源码文件的位置</td>
+</tr>
+</tbody></table>
+<p><code>gdb filename</code>只是attach到一个调试文件，然后使用<code>run</code>启动程序。</p>
+<p>程序触发断点或使用<code>Ctrl+C</code>中断后，可以使用<code>continue</code>命令让程序继续运行。</p>
+<p><code>break</code>命令添加断点：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">break functionname		#函数名</span><br><span class="line">break lineNo			#行号</span><br><span class="line">break filename:lineNo	#文件名+行号</span><br></pre></td></tr></table></figure>
+
+<p><code>print</code>可输出变量的值，也可输出特定表达式的计算结果，甚至可以输出一些函数的执行结果。还可以<strong>修改变量的值</strong>。输出变量值时可以指定输出格式，命令格式：<code>print /format variable</code>.</p>
+<p><code>info threads</code>可查看进程当前的所有线程信息和这些线程分别阻塞在何处。使用<code>thread threadNo</code>可以切换到其它线程。<code>info args</code>可查看当前函数的参数值</p>
+<p><code>next</code>跳到下一行代码，不会进入调用函数。<code>step</code>会进入函数内部。<code>finish</code>会运行完函数并返回。<code>return</code>会直接返回不会执行完函数，可<strong>直接指定返回值</strong>。<code>util lineno</code>可执行到指定行号处。<code>jump &lt;location&gt;</code>，location可以是程序的行号或函数的地址，jump会让程序执行流跳转到指定位置执行。</p>
+<p><code>disassemble</code>命令会输出当前函数的汇编指令，反汇编格式默认AT&amp;T格式，可以使用<code>set disassembly-flavor intel</code>命令设置intel汇编格式。</p>
+<p><code>set args</code>用于向程序传递命令行参数，用于gdb attach程序后，run之前。</p>
+<p><code>watch</code>：监视一个变量或一段内存，当监视的内容发生变化，gdb就会中断。</p>
+<p><code>display</code>：用于监视变量或内存的值，每次gdb中断，都会自动输出这些被监视变量或内存的值。命令格式：<code>display 变量名/内存地址/寄存器名</code>。可以使用<code>info display</code>查看当前已监视了哪些值，可以使用<code>delete display no</code>清除指定变量的监视。</p>
+<p><code>dir</code>：gcc/g++编译出来的可执行程序并不包括完整的源码，-g只是加了一个可执行程序与源码之间的位置映射关系，如果执行代码和编译代码不在一台机器上，或者源文件代码位置发生变化，可使用该命令，格式：<code>dir sourcePath1:sourcePath2:sourcePath3</code>。<code>show dir</code>可查看当前设置了哪些源码搜索路径。</p>
+<h3 id="使用gdb调试多线程程序"><a href="#使用gdb调试多线程程序" class="headerlink" title="使用gdb调试多线程程序"></a>使用gdb调试多线程程序</h3><p>多线程调试时会随着执行线程的切换而发生改变，gdb提供一个将程序执行流锁定在当前调试线程中的命令选项<code>scheduler-locking</code>。使用方法：<code>set scheduler-locking on/step/off</code></p>
+<ul>
+<li><code>set scheduler-locking on</code>，用来锁定当前线程，只观察该线程的运行情况，其它线程会处于暂停状态，可执行next、step、until、finish、return命令。</li>
+<li><code>set scheduler_locking step</code>，也可用来锁定，但是仅当使用next或step命令做单步调试时会锁定当前线程，如果使用until、finish、return等线程内的调试命令其它线程还是有机会运行的。</li>
+<li><code>set sheduler-locking off</code>，用于释放锁定当前线程。</li>
+</ul>
+<h3 id="使用gdb调试多进程程序"><a href="#使用gdb调试多进程程序" class="headerlink" title="使用gdb调试多进程程序"></a>使用gdb调试多进程程序</h3><p>方法一：先在一个shell用gdb调试父进程，等子进程被fork出来后，再新开一个shell窗口使用<code>gdb attach</code>命令attach到子进程上。</p>
+<p>方法二：gdb调试器提供了一个<code>follow-fork</code>选项，通过<code>set follow-fork parent/child</code>设置一个进程fork出新的子进程时，gdb是继续调试父进程还是子进程，默认父进程。可使用<code>show follow-fork mode</code>来查看当前值。</p>
+<h3 id="gdb使用调试技巧"><a href="#gdb使用调试技巧" class="headerlink" title="gdb使用调试技巧"></a>gdb使用调试技巧</h3><ol>
+<li><p>print输出字符串或字符数组完整显示</p>
+<p> 使用print命令打印一个字符串或字符数组时，如果字符串太长会显示不完整，这是在gdb输入<code>set print element 0</code>进行设置可完整显示。</p>
+</li>
+<li><p>让被gdb调试的程序接收信号</p>
+<p> gdb调试过程中Ctrl+C产生的SIGINT信号会发给gdb程序，而不是被调试的程序。解决办法：</p>
+<ol>
+<li>在gdb使用signal函数手动向程序发送信号。<code>signal SIGINT</code>。</li>
+<li>改变gdb信号处理的设置，通过<code>handle SIGINT nostop print pass</code>告诉gdb接收到SIGINT时不要停止，并把该信号传递给目标调试程序。</li>
+</ol>
+</li>
+<li><p>函数存在添加断点时却无效</p>
+<p> 在使用<code>break functionName</code>添加断点时gdb提示<code>Make breakpoint pending on future shared library load? y/n</code>这时即使输入y添加的断点可能也不会正确触发，需要使用<code>break filename:lineno</code>来添加断点。</p>
+</li>
+<li><p>调试中的断点</p>
+<p> 条件断点：<code>break [lineNo] if [condition]</code>，如果条件或行号非法不会触发该断点。另一种添加条件断点的方法是先添加一个普通断点，然后使用<code>condition 断点编号 断点条件</code>来添加。</p>
+</li>
+</ol>
+<h2 id="多线程编程与资源同步"><a href="#多线程编程与资源同步" class="headerlink" title="多线程编程与资源同步"></a>多线程编程与资源同步</h2><p>使用<code>ps-ef</code>命令查看系统进程列表时，带有<code>&lt;defunct&gt;</code>字样的进程即僵尸进程。</p>
+<h3 id="线程的基本操作"><a href="#线程的基本操作" class="headerlink" title="线程的基本操作"></a>线程的基本操作</h3><h4 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h4><p>Linux平台上使用<code>pthread_create</code>来创建线程，函数签名：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">pthread_create</span><span class="params">(<span class="type">pthread_t</span> *thread,</span></span><br><span class="line"><span class="params">                  <span class="type">const</span> <span class="type">pthread_attr_t</span> *attr,</span></span><br><span class="line"><span class="params">                  <span class="type">void</span> *(*start_routine) (<span class="type">void</span> *),</span></span><br><span class="line"><span class="params">                  <span class="type">void</span> *arg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>C++11提供<code>std::thread</code>类，使用这个类可以将任意签名形式的函数作为线程函数。<code>std::thread</code>使用上容易出错，如下面例子：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">threadproc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;I am New Thead!\n&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">func</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(threadproc)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> main &#123;</span><br><span class="line">    <span class="built_in">func</span>();</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际运行时上面代码会崩溃，原因func中的局部变量t被销毁而此时线程函数仍在运行。所以<strong>使用<code>std::thread</code>类时，必须保证在线程函数运行期间其线程对象有效</strong>。虽然<code>std::thread</code>提供了<code>detach</code>方法可让线程对象与线程函数脱离关系，但在实际开发中并不推荐，因为我们可能需要使用线程对象去控制和管理线程的运行和生命周期。所以我们的代码应该<strong>尽量保证线程对象在线程运行期间有效，而不是单纯调用detach方法使线程对象与线程函数的运行分离</strong>。</p>
+<h4 id="获取线程ID"><a href="#获取线程ID" class="headerlink" title="获取线程ID"></a>获取线程ID</h4><blockquote>
+<p>Linux系统中可以通过<code>pstack</code>命令来查看一个进程的线程数量和每个线程的调用堆栈情况。使用该命令查看的程序必须要有调试符号，用户必须有相应的查看权限。</p>
+<p><strong>利用pstack命令排查Linux进程CPU使用率过高的问题</strong>：使用Linux的top命令找到CPU使用率高的PID，然后使用pstack PID查看该进程的每个线程的调用栈情况，对照源码，梳理该线程中是否有大多数处于空转状态的逻辑，然后修改和优化这些逻辑。一般对于不工作的线程应尽量使用锁对象让其挂起而不是空转，提高系统资源利用率。</p>
+</blockquote>
+<ol>
+<li>通过<code>pthread_create</code>函数的第一个参数得到线程ID。</li>
+<li>Linux平台上可以在线程中调用<code>pthread_self</code>函数来获取。</li>
+<li>通过系统调用获取线程ID：<code>int tid = syscall(SYS_gettid);</code>。</li>
+</ol>
+<p>1、2获取线程ID的结果是一样的，都是<code>pthread_t</code>类型，输出的是一块内存空间地址。由于不同的进程可能有同样地址的内存块，因此这两个方法获取的线程ID可能<strong>不是全系统唯一的</strong>，一般是很大的整数。而3获取的线程ID是系统范围内全局唯一的，一般是一个不太大的整数，也就是LWP（Light Weight Process，轻量级进程）的ID。</p>
+<p>C++11获取当前线程ID的方法：可以使用<code>std::this_thread</code>类的<code>get_id</code>获取当前线程ID，是类静态方法。也可以使用<code>std::thread</code>的<code>get_id</code>获取指定线程的ID，这是类实例线程。<code>get_id</code>返回类型位<code>std::thread::id</code>，不可强转为整形。</p>
+<h4 id="等待线程结束"><a href="#等待线程结束" class="headerlink" title="等待线程结束"></a>等待线程结束</h4><p>Linux线程库提供了<code>pthread_join</code>函数用来等待某线程的退出并接收它的返回值。签名如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">pthread_join</span><span class="params">(<span class="type">pthread_t</span> thread, <span class="type">void</span>** retval)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数<code>thread</code>是需要等待的线程ID，<code>retval</code>是输出参数，用于接收等待退出的线程的退出码，可以在调用<code>pthread_exit</code>退出线程时指定线程退出码，也可在线程函数中通过<code>return</code>语句返回线程退出码。</p>
+<p>C++11提供的等待线程结果的函数：<code>std::thread</code>的<code>join</code>方法就是用来等待线程退出的方法。使用该方法必须保证该线程处于运行状态，也就是等待的线程是可join的。C++11的线程库同时提供一个<code>joinable</code>方法来判断某个线程是否可以join。</p>
+<h3 id="惯用法：将C-类对象实例指针作为线程函数的参数"><a href="#惯用法：将C-类对象实例指针作为线程函数的参数" class="headerlink" title="惯用法：将C++类对象实例指针作为线程函数的参数"></a>惯用法：将C++类对象实例指针作为线程函数的参数</h3><p>使用C++面向对象的方式对线程函数进行封装，线程函数就不能是类的实例方法了，即<strong>必须是类的静态方法</strong>。因为类的实例方法在编译阶段会被“翻译”成全局函数，并<strong>将类的实例对象地址作为第1个参数传递给该方法</strong>。这样就不符合线程函数的签名要求。</p>
+<p>如果是类的静态方法，就无法访问类的实例方法。解决办法是将当前对象的地址（this指针）传递给线程函数，然后在线程函数中将该指针转换为原来的类实例。</p>
+<p>类的实例办法也可以作为线程函数，在C++11中可以使用<code>std::bind</code>工具给线程函数绑定一个this指针，这样就可以使用类实例方法作为线程函数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">m_thread.<span class="built_in">reset</span>(<span class="keyword">new</span> std::<span class="built_in">thread</span>(std::<span class="built_in">bind</span>(&amp;classname::threadfunc, <span class="keyword">this</span>)));</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="整型变量的原子操作"><a href="#整型变量的原子操作" class="headerlink" title="整型变量的原子操作"></a>整型变量的原子操作</h3><p>给整形变量赋一个确定的值，如<code>int a = 1;</code>，这条指令一般是原子的，对应一条计算机指令，CPU将立即数1搬运到变量a的内存地址中。</p>
+<p>变量自增或自减一个值，如<code>a++;</code>这条语句一般对应三条指令，首先将变量a对应内存值搬运到某个寄存器，然后将寄存器中的值增1，再将寄存器中值搬运回a代表的内存中。故不是原子的。</p>
+<p>把一个变量的值赋给另一个变量，或一个表达式赋给另一个变量，如：<code>int a = b;</code>，数据不能直接从内存某处搬运到内存另一处，必须借助寄存器中转，这条语句一般对应两条指令，即变量b值搬运到某个寄存器中，再从寄存器搬运到变量a的内存地址中。</p>
+<p>在C++98/03标准中相对整型变量进行原子操作，要么利用操作系统提供的的<strong>相关原子操作API</strong>，要么利用对应操作系统提供的<strong>锁对象</strong>对变量进行保护。</p>
+<p>C++11提供了对整形变量原子操作的相关库<code>std::atomic</code>。</p>
+<h3 id="Linux线程同步对象"><a href="#Linux线程同步对象" class="headerlink" title="Linux线程同步对象"></a>Linux线程同步对象</h3><h4 id="Linux互斥体"><a href="#Linux互斥体" class="headerlink" title="Linux互斥体"></a>Linux互斥体</h4><ol>
+<li><p>初始化：</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 直接赋值</span></span><br><span class="line"><span class="type">pthread_mutex_t</span> mymutex = PTHREAD_MUTEX_INITIALIZER;</span><br><span class="line"><span class="comment">// 动态分配或要设置互斥体的属性</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutex_init</span><span class="params">(<span class="type">pthread_mutex_t</span>* restrict mutex, </span></span></span><br><span class="line"><span class="params"><span class="function">                       <span class="type">const</span> <span class="type">pthread_mutexattr_t</span>* restrict attr)</span></span>;</span><br></pre></td></tr></table></figure></li>
+<li><p>销毁：不需要时销毁，使用赋值初始化无需销毁</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutex_destroy</span><span class="params">(<span class="type">pthread_mutex_t</span>* mutex)</span></span>;</span><br></pre></td></tr></table></figure></li>
+<li><p>属性：设置互斥体对象属性时需要创建一个<code>pthread_mutexattr_t</code>类型的对象，不需要时销毁</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutexattr_init</span><span class="params">(<span class="type">pthread_mutexattr_t</span>* attr)</span></span>;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutexattr_destroy</span><span class="params">(<span class="type">pthread_mutexattr_t</span>* attr)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p> 设置或获取想要的属性类型</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutexattr_settype</span><span class="params">(<span class="type">pthread_mutexattr_t</span>* attr, <span class="type">int</span> type)</span></span>;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">pthread_mutexattr_gettype</span><span class="params">(<span class="type">const</span> <span class="type">pthread_mutexattr_t</span>* restrict attr, </span></span></span><br><span class="line"><span class="params"><span class="function">                             <span class="type">int</span>* restrict type)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p> 属性类型有如下取值：</p>
+<ol>
+<li>**PTHREAD_MUTEX_NORMAL(普通锁)**：默认属性，一个线程加锁以后，其他线程回阻塞在<code>pthread_mutex_lock</code>调用处，直到对互斥体加锁的线程释放锁。重复加锁也会阻塞在调用处。</li>
+<li>**PTHREAD_MUTEX_ERRORCHECK(检错锁)**：当前线程重复蒋所会直接返回<code>EDEADLOCK</code>，其它线程回阻塞在<code>pthread_mutex_lock</code>调用处。</li>
+<li>**PTHREAD_MUTEX_RECURSIVE(可重入锁)**：允许同一线程重复加锁，每调用<code>pthread_mutex_lock</code>一次其锁引用计数就增加1.</li>
+</ol>
+</li>
+</ol>
+<h4 id="Linux信号量"><a href="#Linux信号量" class="headerlink" title="Linux信号量"></a>Linux信号量</h4><p>信号量代表一定的资源数量，可根据当前资源数量按需唤醒指定数量的资源消费者线程。资源消费者线程获取信号量就会让资源减少指定的数量，如果资源数量减少为0则消费者线程将全部处于挂起状态。</p>
+<p>Linux信号量常用API：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化信号量，pshared为0表示只在同一进程的线程间共享，为1表示多个进程间共享；value表示信号量初始值</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_init</span><span class="params">(<span class="type">sem_t</span>* sem, <span class="type">int</span> pshared, <span class="type">unsigned</span> <span class="type">int</span> value)</span>;</span><br><span class="line"><span class="comment">//销毁信号量</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_destroy</span><span class="params">(<span class="type">sem_t</span>* sem)</span>;</span><br><span class="line"><span class="comment">//信号量增1</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_post</span><span class="params">(<span class="type">sem_t</span>* sem)</span>;</span><br><span class="line"><span class="comment">//信号量为0阻塞，大于0唤醒减1</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_wait</span><span class="params">(<span class="type">sem_t</span>* sem)</span>;</span><br><span class="line"><span class="comment">//信号量为0也不阻塞，返回-1</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_trywait</span><span class="params">(<span class="type">sem_t</span>* sem)</span>;</span><br><span class="line"><span class="comment">//带超时时间</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sem_timedwait</span><span class="params">(<span class="type">sem_t</span>* sem, <span class="type">const</span> <span class="keyword">struct</span> timespec* abs_timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Linux条件变量"><a href="#Linux条件变量" class="headerlink" title="Linux条件变量"></a>Linux条件变量</h4><p>用于反复判断一个多线程的共享条件是否满足，一直到该条件满足为止。由于该条件被多个线程操作，因此每次判断之前都需要进行加锁操作。</p>
+<p>条件变量为什么要与互斥体结合使用？判断条件是否满足时要获取互斥体对象，要保证释放互斥体对象与条件变量等待唤醒是原子操作，即解锁和等待这两个步骤必须在同一个原子操作中，才能确保cond_wait在唤醒之前不会有其他线程获得这个互斥体。如果不是原子的，在释放锁之后cond_wait之前切到其它线程获得该锁并发送条件信号，当回到原线程就可能错过该信号而一直等待下去。</p>
+<p>条件变量的使用：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//赋值初始化</span></span><br><span class="line"><span class="type">pthread_cond_t</span> cond = PTHREAD_COND_INITIALIZER;</span><br><span class="line"><span class="comment">//初始化</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_cond_init</span><span class="params">(<span class="type">pthread_cond_t</span>* cond, <span class="type">const</span> <span class="type">pthread_condattr_t</span>* attr)</span>;</span><br><span class="line"><span class="comment">//销毁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_cond_destroy</span><span class="params">(<span class="type">pthread_cond_t</span>* cond)</span>;</span><br><span class="line"><span class="comment">//等待条件变量被唤醒</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_cond_wait</span><span class="params">(<span class="type">pthread_cond_t</span>* <span class="keyword">restrict</span> cond, <span class="type">pthread_mutex_t</span>* <span class="keyword">restrict</span> mutex)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_condi_timedwait</span><span class="params">(<span class="type">pthread_cond_t</span>* <span class="keyword">restrict</span> cond, <span class="type">pthread_mutex_t</span>* <span class="keyword">restrict</span> mutex,</span></span><br><span class="line"><span class="params">                           <span class="type">const</span> <span class="keyword">struct</span> timespec* <span class="keyword">restrict</span> abstime)</span>;</span><br><span class="line"><span class="comment">//唤醒</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_cond_signal</span><span class="params">(<span class="type">pthread_cond_t</span>* cond)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_cond_broadcast</span><span class="params">(<span class="type">pthread_cond_t</span>* cond)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>虚假唤醒</strong>：因为存在徐家桓兴，因此条件变量醒来后需再次判断条件变量，使用while循环判断条件。</p>
+<p><strong>存在虚假唤醒的原因</strong>：<code>pthread_cond_wait</code>是<code>futex</code>系统调用，属于阻塞型的系统调用，当系统调用被信号中断时，会返回-1并把errno错误码设置为EINTR。很多这种系统调用在被信号中断后，都会自行重启（即再次调用一次这个函数）。但<code>pthread_cond_wait</code>函数被信号中断返回之后，到重新调用之前，<code>pthread_cond_signal</code>可能已被调用，一旦错失该信号可能会导致程序一直等待。为避免这种情况发生，<strong>宁可虚假唤醒，也不能重启</strong>。</p>
+<h4 id="Linux读写锁"><a href="#Linux读写锁" class="headerlink" title="Linux读写锁"></a>Linux读写锁</h4><p>读多写少时，读请求之间无须同步，写请求必须锁住读请求和其它写请求。</p>
+<p>读写锁应用方法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//赋值初始化</span></span><br><span class="line"><span class="type">pthread_rwlock_t</span> rwlock = PTHREAD_RWLOCK_INITIALIZER;</span><br><span class="line"><span class="comment">//初始化</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_init</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock, <span class="type">const</span> <span class="type">pthread_rwlockattr_t</span>* attr)</span>;</span><br><span class="line"><span class="comment">//销毁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_destroy</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br><span class="line"><span class="comment">//请求读锁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_rdlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_tryrdlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_timedrdlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock, <span class="type">const</span> <span class="keyword">struct</span> timespec* abstime)</span>;</span><br><span class="line"><span class="comment">//请求写锁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_wrlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_trywrlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_timedwrlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock, <span class="type">const</span> <span class="keyword">struct</span> timespec* abtime)</span>;</span><br><span class="line"><span class="comment">//释放锁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlock_unlock</span><span class="params">(<span class="type">pthread_rwlock_t</span>* rwlock)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>读写锁属性：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlockattr_init</span><span class="params">(<span class="type">pthread_rwlockattr_t</span>* attr)</span>;</span><br><span class="line"><span class="comment">//销毁</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlockattr_destroy</span><span class="params">(<span class="type">pthreaed_rwlockattr_t</span>* attr)</span>;</span><br><span class="line"><span class="comment">//获取读写锁类型</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlockattr_setkind_np</span><span class="params">(<span class="type">pthread_rwlockattr_t</span>* attr, <span class="type">int</span> pref)</span>;</span><br><span class="line"><span class="comment">//设置读写锁类型</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_rwlockattr_getkind_np</span><span class="params">(<span class="type">const</span> <span class="type">pthread_rwlockattr_t</span>* attr, <span class="type">int</span>* pref)</span>;</span><br><span class="line"><span class="comment">//pref类型取值</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> &#123;</span></span><br><span class="line">    <span class="comment">//读者有限</span></span><br><span class="line">    PTHREAD_RWLOCK_PREFER_READER_NP,</span><br><span class="line">    <span class="comment">//读者优先</span></span><br><span class="line">    PTHREAD_RWLOCK_PREFER_WRITER_NP,</span><br><span class="line">    <span class="comment">//写者优先</span></span><br><span class="line">    PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP,</span><br><span class="line">    PTHREAD_RWLOCK_DEFAULT_NP = PTHREAD_RWLOCK_PREFER_READER_NP</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="C-11-14-17线程同步对象"><a href="#C-11-14-17线程同步对象" class="headerlink" title="C++11/14/17线程同步对象"></a>C++11/14/17线程同步对象</h3><ol>
+<li><p><strong><code>std::mutex</code>系列</strong></p>
+<table>
+<thead>
+<tr>
+<th>互斥量</th>
+<th>版本</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mutex</td>
+<td>C++11</td>
+<td>基本互斥量</td>
+</tr>
+<tr>
+<td>timed_mutex</td>
+<td>C++11</td>
+<td>有超时机制的互斥量</td>
+</tr>
+<tr>
+<td>recursive_mutex</td>
+<td>C++11</td>
+<td>可重入的互斥量</td>
+</tr>
+<tr>
+<td>recursive_timed_mutex</td>
+<td>C++11</td>
+<td>结合timed_mutex和recursive_mutex特点的互斥量</td>
+</tr>
+<tr>
+<td>shared_timed_mutex</td>
+<td>C++14</td>
+<td>具有超时机制的可共享互斥量</td>
+</tr>
+<tr>
+<td>shared_mutex</td>
+<td>C++17</td>
+<td>共享的互斥量</td>
+</tr>
+</tbody></table>
+<p> 均提供<code>lock</code>、<code>trylock</code>和<code>unlock</code>方法。为避免死锁，lock方法和unlock方法需成对使用。</p>
+<p> C++提供通过RAII计数封装的接口：</p>
+<table>
+<thead>
+<tr>
+<th>互斥量管理</th>
+<th>版本</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>lock_guard</td>
+<td>C++11</td>
+<td>基于作用域的互斥量管理</td>
+</tr>
+<tr>
+<td>unique_lock</td>
+<td>C++11</td>
+<td>更加灵活的互斥量管理</td>
+</tr>
+<tr>
+<td>shared_lock</td>
+<td>C++14</td>
+<td>共享互斥量的管理</td>
+</tr>
+<tr>
+<td>scoped_lock</td>
+<td>C++17</td>
+<td>多互斥量避免死锁的管理</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><strong><code>std::shared_mutex</code></strong></p>
+<p> C++17才引入，底层实现是操作系统提供的读写锁，提供<code>lock</code>方法和<code>unlock</code>方法用于获取和解除<strong>写锁</strong>，提供<code>lock_shared</code>方法和<code>unlock_shared</code>方法用于获取和解除<strong>读锁</strong>。且<code>unique_lock</code>用于加解写锁，<code>shared_lock</code>用于加解读锁。</p>
+</li>
+<li><p><strong><code>std::condition_variable</code></strong></p>
+<p> C++11提供了<code>std::condition_variable</code>类代表条件变量，提供wait系列方法（<code>wait</code>、<code>wait_for</code>、<code>wait_until</code>方法），发送条件信号notify方法（<code>notify_one</code>和<code>notify_all</code>方法）。使用时需要绑定1个<code>std::unique_lock</code>或<code>std::lock_guard</code>对象。</p>
+</li>
+</ol>
+<h3 id="如何确保创建的线程一定能运行"><a href="#如何确保创建的线程一定能运行" class="headerlink" title="如何确保创建的线程一定能运行"></a>如何确保创建的线程一定能运行</h3><p>在一些严谨的项目中创建线程时，不仅回<strong>判断线程创建函数是否调用成功</strong>，还会<strong>在线程函数中利用线程同步对象通知创建者线程是否创建成功。</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">std::mutex					mymutex;</span><br><span class="line">std::condition_variable		mycv;</span><br><span class="line"><span class="type">bool</span> success = <span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">thread_func</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(mymutex)</span></span>;</span><br><span class="line">        success = <span class="literal">true</span>;</span><br><span class="line">        mycv.<span class="built_in">notify_all</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">true</span>) &#123; &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(thread_func)</span></span>;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(mymutex)</span></span>;</span><br><span class="line">        <span class="keyword">while</span>(!success) &#123;</span><br><span class="line">            mycv.<span class="built_in">wait</span>(lock);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;start thread successfully&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在很少使用这样的方法，因为多年前多线程计数开始流行时，由于软硬件限制或开发人员对多线程编程不熟悉。现如今不用写这样的“防御”代码，只要正确使用线程创建函数，实际编码时对线程函数的返回值一般也不必判断，基本认为新线程一定回创建成功，而且线程函数可以正常运行。</p>
+<h3 id="多线程使用锁经验总结"><a href="#多线程使用锁经验总结" class="headerlink" title="多线程使用锁经验总结"></a>多线程使用锁经验总结</h3><ol>
+<li><p><strong>减少锁的使用次数</strong></p>
+<p> 使用锁的代码一般有如下性能损失：</p>
+<ul>
+<li>加锁和解锁操作本身的开销。</li>
+<li>临界区代码不能并发执行。</li>
+<li>进入临界区次数过于频繁，线程间对临界区的争夺太过激烈，线程竞争失败回陷入阻塞并让出CPU，导致执行上下文切换的次数远远多于不使用互斥体的次数。</li>
+</ul>
+</li>
+<li><p><strong>明确锁的范围</strong></p>
+</li>
+<li><p><strong>减少锁的使用粒度</strong></p>
+<p> 尽量减少锁作用的临界区代码范围，范围越小，多个线程排队进入临界区的时间就会越短。</p>
+</li>
+<li><p><strong>避免死锁的一些建议</strong></p>
+<ul>
+<li>有一个加锁操作，一定要记得函数退出时解锁，且每个退出路径上都不要忘记解锁。</li>
+<li>线程退出时一定要及时释放其持有的锁</li>
+<li>多线程请求锁的方向要一致，避免死锁。</li>
+<li>当需要同一个线程重复请求一个锁时，就需要明白使用锁的行为是递增锁引用计数还是阻塞或直接获得锁。</li>
+</ul>
+</li>
+<li><p><strong>避免活锁的一些建议</strong></p>
+<p> “活锁”指多个线程使用trylock系列函数时相互谦让导致即使在某段时间内锁资源可用，也可能导致需要锁的线程拿不到锁。应尽量避免让过多的线程使用trylock请求锁，以免出现活锁，这是对资源的浪费。</p>
+</li>
+</ol>
+<h3 id="线程局部存储"><a href="#线程局部存储" class="headerlink" title="线程局部存储"></a>线程局部存储</h3><ol>
+<li><strong>Linux的线程局部存储</strong></li>
+</ol>
+<p>线程局部存储（Thread Local Storage，TLS），将对应的存储区域称为线程局部存储区。Linux的NTPL提供了一套函数接口来实现线程局部存储功能：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//成功返回0，为线程局部存储创建一个新key。线程终止时key关联的值不是NULL，回执行destructor函数。</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_key_create</span><span class="params">(<span class="type">pthread_key_t</span>* key, <span class="type">void</span>(*destructor)(<span class="type">void</span>*))</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_key_delete</span><span class="params">(<span class="type">pthread_key_t</span> key)</span>;</span><br><span class="line"><span class="comment">//为key设置数据</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">pthread_setspecific</span><span class="params">(<span class="type">pthread_key_t</span> key, <span class="type">const</span> <span class="type">void</span>* value)</span>;</span><br><span class="line"><span class="comment">//获取key对应数据</span></span><br><span class="line"><span class="type">void</span>* <span class="title function_">pthread_getspecific</span><span class="params">(<span class="type">pthread_key_t</span> key)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>Linux gcc编译器也提供了一个关键字<code>__thread</code>用于定义线程局部变量。</p>
+<ol start="2">
+<li><p><strong>C++11的thread_local关键字</strong></p>
+<p> C++11提供关键字<code>thread_local</code>来定义一个线程变量。</p>
+</li>
+</ol>
+<h3 id="C库的非线程安全函数"><a href="#C库的非线程安全函数" class="headerlink" title="C库的非线程安全函数"></a>C库的非线程安全函数</h3><p>一些函数编写时还没有多线程技术，函数内部可能回使用静态变量和全局变量导致非线程安全。很多函数出现了对应多线程安全版本。</p>
+<h3 id="线程池与队列系统的设计"><a href="#线程池与队列系统的设计" class="headerlink" title="线程池与队列系统的设计"></a>线程池与队列系统的设计</h3><p>消息中间件，典型有Kafka、ActiveMQ、RabbitMQ、RocketMQ等。适当了解一两种开源队列系统的用法，尤其是设计思路。</p>
+<h3 id="纤程（Fiber）与协程（Routine）"><a href="#纤程（Fiber）与协程（Routine）" class="headerlink" title="纤程（Fiber）与协程（Routine）"></a>纤程（Fiber）与协程（Routine）</h3><p>协程，可认为是在应用层模拟的线程。协程避免了线程上下文切换的部分额外开销损耗，同时具有并发运行的优点，降低了编写并发程序的复杂度。其是非抢占式调度，无法实现公平的任务调用，也无法直接利用多核CPU的优势。</p>
+<h2 id="网络编程重难点解析"><a href="#网络编程重难点解析" class="headerlink" title="网络编程重难点解析"></a>网络编程重难点解析</h2><h3 id="TCP网络通信基本流程"><a href="#TCP网络通信基本流程" class="headerlink" title="TCP网络通信基本流程"></a>TCP网络通信基本流程</h3><p>服务器：</p>
+<ol>
+<li>调用socket函数创建socket（监听socket）</li>
+<li>调用bind函数将socket绑定到某个IP和端口的二元组上</li>
+<li>调用listen函数开启监听</li>
+<li>有客户连接调用accept函数接收连接，产生一个新的socket</li>
+<li>基于新的socket调用send或recv函数开始与客户进行数据交流</li>
+<li>通信结束，调用close函数关闭监听socket</li>
+</ol>
+<p>客户端：</p>
+<ol>
+<li>调用socket函数创建客户端socket</li>
+<li>调用connect函数尝试连接服务器</li>
+<li>连接成功后调用send或recv函数与服务器进行数据交流</li>
+<li>通信结束，调用close函数关闭监听socket。</li>
+</ol>
+<h3 id="bind函数重难点分析"><a href="#bind函数重难点分析" class="headerlink" title="bind函数重难点分析"></a>bind函数重难点分析</h3><p><strong>绑定IP地址</strong>：会用到一个宏<code>INADDR_ANY</code>，表示应用程序不绑定到特定的IP上。``INADDR_ANY<code>相当于地址</code>0.0.0.0`，表示不确定地址或所有地址或任意地址。也就是只要能传到本机，不管什么IP只要端口正确就收。</p>
+<p><strong>绑定端口号</strong>：类型为short类型，范围0~65535.一般1024以下的端口是保留端口，不建议用户程序使用。如果<strong>绑定端口号为0那操作系统会随机分配一个可用的监听端口</strong>。客户端也可绑定端口号来以指定端口号方位服务器。</p>
+<h3 id="socket的阻塞模式和非阻塞模式"><a href="#socket的阻塞模式和非阻塞模式" class="headerlink" title="socket的阻塞模式和非阻塞模式"></a>socket的阻塞模式和非阻塞模式</h3><p>socket默认是阻塞模式的。在Linux可以使用<code>fcntl</code>函数或<code>ioctl</code>函数给创建的socket增加<code>O_NONBLOCK</code>标志来将socket设置为非阻塞。也可以在创建socket时设置为非阻塞：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);</span><br></pre></td></tr></table></figure>
+
+<p>Linux上利accept函数返回一个与客户端通信的socket也提供要给扩展函数<code>accept4</code>可直接设置为非阻塞：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> fd = accept4(listenfd, &amp;clienaddr, &amp;addrlen, SOCK_NONBLOCK);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>send和recv本质上并不是在网络上收发数据，而是同内核缓冲区进行数据拷贝。至于数据什么时候从网络发送和接收是TCP/IP协议栈决定。如果socket设置了<code>TCP_NODELAY</code>选项（即禁用nagel算法），存放在内核缓冲区的数据就会立即发出去。</p>
+<p>send和recv函数各种返回值含义：</p>
+<table>
+<thead>
+<tr>
+<th>返回值n</th>
+<th>返回值含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>大于0</td>
+<td>成功发送（send）或接收（recv）n字节</td>
+</tr>
+<tr>
+<td>0</td>
+<td>对端关闭连接</td>
+</tr>
+<tr>
+<td>小于0（-1）</td>
+<td>出错、被信号中断，对端TCP窗口太小导致数据发送不出去或者当前网卡缓冲区已无数据可接收</td>
+</tr>
+</tbody></table>
+<p>针对返回值为-1情况：</p>
+<table>
+<thead>
+<tr>
+<th>返回值和错误码</th>
+<th>send函数</th>
+<th>recv函数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EWOUDBLOCK或EAGAIN</td>
+<td>TCP窗口太小，数据暂时发不出去</td>
+<td>在当前内核缓冲区无可读数据</td>
+</tr>
+<tr>
+<td>EINTR</td>
+<td>被信号中断，需要重试</td>
+<td>被信号中断，需要重试</td>
+</tr>
+<tr>
+<td>不是以上3种</td>
+<td>出错</td>
+<td>出错</td>
+</tr>
+</tbody></table>
+<p>以上错误码针对非阻塞socket的send和recv函数，对于阻塞下socket返回值为-1就是出错。</p>
+<h3 id="发送0字节数据的效果"><a href="#发送0字节数据的效果" class="headerlink" title="发送0字节数据的效果"></a>发送0字节数据的效果</h3><p>发送一个0字节的数据实际上不会组包发送出去，即对端不会收到任何数据包。但是send发送0字节的数据包会返回0.</p>
+<h3 id="connect函数在阻塞和非阻塞模式下行为"><a href="#connect函数在阻塞和非阻塞模式下行为" class="headerlink" title="connect函数在阻塞和非阻塞模式下行为"></a>connect函数在阻塞和非阻塞模式下行为</h3><p>socket设置为非阻塞模式，调用connect会立即返回；如果返回-1并不一定表示连接出错，如果错误码是<code>EINPROGRESS</code>则表示正在尝试连接。</p>
+<h3 id="连接时顺便接收第1组数据"><a href="#连接时顺便接收第1组数据" class="headerlink" title="连接时顺便接收第1组数据"></a>连接时顺便接收第1组数据</h3><p>在一些应用场景中，我们需要在网络通信双方建立连接成功后就把对端的第1组数据接收过来。Linux提供了<code>TCP_DEFER_ACCEPT</code>的socket选项，设置后只有连接建立成功且收到第1组对端数据时accept函数才会返回。</p>
+<h3 id="获取当前socket对应的接收缓冲区中可读数据量"><a href="#获取当前socket对应的接收缓冲区中可读数据量" class="headerlink" title="获取当前socket对应的接收缓冲区中可读数据量"></a>获取当前socket对应的接收缓冲区中可读数据量</h3><p>想要知道一个非监听socket可读时当前接收缓冲区有多少数据，在Linux上可以使用ioctl函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> bytesToRecv = <span class="number">0</span>;</span><br><span class="line">ioctl(sockfd, FIONREAD, &amp;bytesToRecv);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Linux-SIGPIPE信号"><a href="#Linux-SIGPIPE信号" class="headerlink" title="Linux SIGPIPE信号"></a>Linux SIGPIPE信号</h3><p>A关闭连接，B继续向A发送数据，此时B会收到一个RST报文应答，若B继续向A发送，系统就会产生一个SIGPIPE信号给B进程，表明该连接已断开。系统对SIGPIPE信号默认处理行为是进程退出。</p>
+<p>TCP通信的全双工的，可看作两条单工通信，两端各负责一条。当对端关闭时，虽然本意是关闭两条信道，但本端只收到FIN包。从TCP语义来说表示对端关闭了其所负责的那一条信道，虽然不再发送数据，但仍可以接收数据。因为TCP限制，<strong>通信一方无法知道对端的socket是调用了close还是调用了shutdown</strong>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">shutdown</span><span class="params">(<span class="type">int</span> socket, <span class="type">int</span> how)</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>how可以被设置为<code>SHUT_RD</code>、<code>SHUT_WR</code>或<code>SHUT_RDWR</code>，分别表示关闭接收、发送或同时关闭。</p>
+</blockquote>
+<p>为避免服务进程退出，可以捕获<code>SIGPIPE</code>信号并对其进行处理或忽略该信号：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">signal(SIGPIPE, SIG_IGN);</span><br></pre></td></tr></table></figure>
+
+<p>这样在对端关闭的情况下，第2次调用send方法会返回-1，同时errno错误码被置为SIGPIPE，程序便能知道对端已经关闭。</p>
+<h3 id="高效的readv和writev函数"><a href="#高效的readv和writev函数" class="headerlink" title="高效的readv和writev函数"></a>高效的readv和writev函数</h3><p>实际开发中，高性能服务有一个原则：尽量减少系统调用。有时需要将一个文件描述符对应的数据读到多个缓冲区中，或者将多个缓冲区中的数据同时写入一个文件描述符。Linux提供了一些函数完成：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span> <span class="title function_">readv</span><span class="params">(<span class="type">int</span> fd, <span class="type">const</span> <span class="keyword">struct</span> iovec *iov, <span class="type">int</span> iovcnt)</span>;</span><br><span class="line"><span class="type">ssize_t</span> <span class="title function_">writev</span><span class="params">(<span class="type">int</span> fd, <span class="type">const</span> <span class="keyword">struct</span> iovec* iov, <span class="type">int</span> iovcnt)</span>;</span><br><span class="line"><span class="type">ssize_t</span> <span class="title function_">preadv</span><span class="params">(<span class="type">int</span> fd, <span class="type">const</span> <span class="keyword">struct</span> iovec *iov, <span class="type">int</span> iovcnt, <span class="type">off_t</span> offset)</span>;</span><br><span class="line"><span class="type">ssize_t</span> <span class="title function_">pwritev</span><span class="params">(<span class="type">int</span> fd, <span class="type">const</span> <span class="keyword">struct</span> iovec* iov, <span class="type">int</span> iovcnt, <span class="type">off_t</span> offset)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>iovec结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">iovec</span> &#123;</span></span><br><span class="line">    <span class="type">void</span> *iov_base;		<span class="comment">//数据起始地址</span></span><br><span class="line">    <span class="type">size_t</span> iov_len;		<span class="comment">//数据字节数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="主机字节序和网络字节序"><a href="#主机字节序和网络字节序" class="headerlink" title="主机字节序和网络字节序"></a>主机字节序和网络字节序</h3><p><strong>小端</strong>：数高位存储在内存地址高，数低位存储在内存地址低，即高高低低。</p>
+<p><strong>大端</strong>：相反，高低高低，网络字节序就是大端。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">uint16_t</span> <span class="title function_">htons</span><span class="params">(<span class="type">uint16_t</span> hostshort)</span>;</span><br><span class="line"><span class="type">uint32_t</span> <span class="title function_">htonl</span><span class="params">(<span class="type">uint32_t</span> hostlong)</span>;</span><br><span class="line"><span class="type">uint16_t</span> <span class="title function_">ntohs</span><span class="params">(<span class="type">uint16_t</span> netshort)</span>;</span><br><span class="line"><span class="type">uint32_t</span> <span class="title function_">ntohl</span><span class="params">(<span class="type">uint32_t</span> netlong)</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="域名解析API"><a href="#域名解析API" class="headerlink" title="域名解析API"></a>域名解析API</h3><p>有时需要使用<strong>域名</strong>和<strong>端口号</strong>来连接服务，这时候需要使用<code>gethostbyname</code>函数先把域名转换为IP地址，再使用connect函数连接。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> hostent* <span class="title function_">gethostbyname</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* name)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>结果存放在hostent结构体的最后一个字段<code>h_addr_list</code>中，实际上是uint32_t类型，如需要转为点分十进制字符串可用<code>inet_ntoa</code>函数。</p>
+<p>在新的Linux上，gethostbyname已被废弃，应该使用<code>getaddrinfo</code>来替代它。可以处理名字到地址以及服务到端口这两种转换。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">getaddrinfo</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* node, <span class="type">const</span> <span class="type">char</span>* service,</span></span><br><span class="line"><span class="params">               <span class="type">const</span> <span class="keyword">struct</span> addrinfo* hints, <span class="keyword">struct</span> addrinfo** res)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>调用成功返回0，结果存储在res中，addrinfo结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">addrinfo</span> &#123;</span></span><br><span class="line">    <span class="type">int</span>					ai_flags;</span><br><span class="line">    <span class="type">int</span>					ai_family;</span><br><span class="line">    <span class="type">int</span>					ai_socktype;</span><br><span class="line">    <span class="type">int</span> 				ai_protocol;</span><br><span class="line">    <span class="type">socklen_t</span>			ai_addrlen;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr</span>*	<span class="title">ai_addr</span>;</span></span><br><span class="line">    <span class="type">char</span>*				ai_canonname;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">addrinfo</span>*	<span class="title">ai_next</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>如果不需要res变量，<strong>需要使用<code>freeaddrinfo</code>函数将其指向的资源释放</strong>。</p>
+<h2 id="网络通信故障排查常用命令"><a href="#网络通信故障排查常用命令" class="headerlink" title="网络通信故障排查常用命令"></a>网络通信故障排查常用命令</h2><h3 id="ifconfig命令"><a href="#ifconfig命令" class="headerlink" title="ifconfig命令"></a>ifconfig命令</h3><p>查看当前系统的网卡和IP地址信息。</p>
+<p>可使用<code>-s</code>选项显示网卡信息的精简列表</p>
+<p>使用<code>-a</code>选项显示所有网卡信息，包括未激活的</p>
+<p>可使用<code>ifconfig up</code>命令激活某个网卡，使用<code>ifconfig down</code>禁用某个网卡</p>
+<p>ifconfig还可将一个IP地址绑定到某个网卡上，或将一个IP地址从某个网卡解绑：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">绑定</span></span><br><span class="line">ifconfig 网卡名 add IP地址</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">解绑</span></span><br><span class="line">ifconfig 网卡名 del IP地址</span><br></pre></td></tr></table></figure>
+
+<h3 id="ping命令"><a href="#ping命令" class="headerlink" title="ping命令"></a>ping命令</h3><p>用于侦测本机到目标主机的网络是否畅通。通过发送ICMP数据包实现的</p>
+<h3 id="telnet命令"><a href="#telnet命令" class="headerlink" title="telnet命令"></a>telnet命令</h3><p>可以使用<code>telnet ip port</code>连接到服务程序上，不指定端口则默认23号端口。即可检测指定IP地址和端口号的监听服务是否存在。</p>
+<h3 id="netstat命令"><a href="#netstat命令" class="headerlink" title="netstat命令"></a>netstat命令</h3><p>用于查看网络连接状态。</p>
+<h3 id="lsof命令"><a href="#lsof命令" class="headerlink" title="lsof命令"></a>lsof命令</h3><p>list opened filedesciptor，列出已打开的文件描述符。</p>
+<h3 id="nc命令"><a href="#nc命令" class="headerlink" title="nc命令"></a>nc命令</h3><p>即netcat命令，用于模拟一个服务器程序被其它客户端连接，或模拟一个客户端连接其它服务器，连接之后就可以进行数据收发。</p>
+<h3 id="curl命令"><a href="#curl命令" class="headerlink" title="curl命令"></a>curl命令</h3><p>可以模拟发送HTTP请求的一个很常用命令。</p>
+<h3 id="tcpdump命令"><a href="#tcpdump命令" class="headerlink" title="tcpdump命令"></a>tcpdump命令</h3><p>抓包工具。</p>
+<p><code>-i</code>指定要捕获的目标网卡名，可使用<code>any</code>捕获所有网卡。</p>
+<p><code>-n</code>不要将IP地址显示为别名。</p>
+<p><code>-vv</code>显示详细的抓包数据；<code>-vvv</code>显示更详细的抓包数据。</p>
+<p><code>-w</code>将抓取的包的原始信息写入文件中，后跟文件名</p>
+<p><code>-r</code>从实用-w保存到文件中读取数据包的信息。</p>
+<h2 id="网络通信协议设计"><a href="#网络通信协议设计" class="headerlink" title="网络通信协议设计"></a>网络通信协议设计</h2><h3 id="从struct到TLV"><a href="#从struct到TLV" class="headerlink" title="从struct到TLV"></a>从struct到TLV</h3><p>比如要传输用户信息的数据包，则可以将数据包格式定义成：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> pack(push, 1)</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">userinfo</span> &#123;</span></span><br><span class="line">    <span class="type">int32_t</span>		cmd;</span><br><span class="line">    <span class="type">char</span>		gender;</span><br><span class="line">    <span class="type">char</span> 		name[<span class="number">8</span>];</span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> pack(pop)</span></span><br></pre></td></tr></table></figure>
+
+<p>但如果需要在该结构体增加一个字段来升级服务端协议格式，会导致旧客户端无法使用。所以最初设计协议时需要增加一个<strong>版本号字段</strong>，针对不同的版本做不同处理。如果业务需求变化快会导致版本迭代多，导致根据版本号解析代码变得非常多。</p>
+<p>实际开发中，设计协议时尽量考虑周全，避免反复修改协议的结构。对于<strong>不定长的字符串</strong>设置固定长度字符数组也是不太好的，大小不具有<strong>伸缩性</strong>：太长会造成内存和网络带宽的浪费，太短可能不够用。</p>
+<p><strong>解决不定长字符串问题</strong>：在字符串字段前加一个表示字符串长度的标志。</p>
+<p><strong>解决修改协议（如新增字段）需要兼容旧版本问题</strong>：通过在每个字段前面加一个<code>type</code>类型，这样每个字段就是<strong>自解释</strong>————TLV（Type Length Value）。</p>
+<p>TLV类型易于扩展，可以嵌套，但缺点：</p>
+<ol>
+<li>每个字段都增加了一个type类型。</li>
+<li>解析字段时需要判断type的逻辑</li>
+<li>即使知道每个字段的类型，但具体含义还是要指定文档格式。</li>
+</ol>
+<p>实际开发中，完全遵循TLV格式的协议并不多。比如一些整数类型一旦知道类型就能确定长度就没必要长度字段了。</p>
+<p>协议根据内容是否是文本格式分为<strong>文本协议</strong>和<strong>二进制协议</strong>。</p>
+<p><strong>IDL</strong>（Interface Description Language）是描述语言，将协议类型规范化，提供跨语言特性。我们可以定义一个描述协议格式的IDL文件，然后通过IDL工具分析IDL文件，生成各种语言版本的协议代码。Google Protobuf自带的protoc就是IDL工具。</p>
+<h3 id="整型数值压缩"><a href="#整型数值压缩" class="headerlink" title="整型数值压缩"></a>整型数值压缩</h3><p>对于int32这样的类型，最大可以表示4294967295.实际应用中可能用不到这么大数，对此进行压缩，使用每个字节的最高位作为标志位，为1表示到该字节还没结束，为0表示到该字节结束，低7位表示实际的数值————Varint。</p>
+<h3 id="设计通信协议时的注意事项"><a href="#设计通信协议时的注意事项" class="headerlink" title="设计通信协议时的注意事项"></a>设计通信协议时的注意事项</h3><ol>
+<li><p><strong>字节对齐</strong></p>
+<p> 可使用<code>#pragma pack(push, n)</code>指定编译器字节对齐方式，使用<code>#pragma pack(pop)</code>让编译器恢复之前的对齐方式。</p>
+</li>
+<li><p><strong>显示指定整形字段的长度</strong></p>
+<p> 使用<code>int32_t</code>、<code>int64_t</code>这样的类型代替<code>int</code>、<code>long</code>，因为int和long在不同字长的操作系统中表示的长度可能不一样，会导致协议解析出错或产生错误的结果。</p>
+</li>
+<li><p><strong>浮点数要考虑精度问题</strong></p>
+<p> 计算机表示浮点数存在精度取舍不准确的问题，为了避免不同机器解析的结果不同，建议在网络传输时将浮点数放大相应的倍数变成整数或转换为字符串来传输。</p>
+</li>
+<li><p><strong>大小端问题</strong></p>
+<p> 协议中存在整形字段，建议使用同一字节序。不一定非要转换为网络字节序，如果明确地知道通信双方使用的是相同的字节序，则也可不转换。</p>
+</li>
+<li><p><strong>协议与自动升级功能</strong></p>
+<p> 发布的客户端一般通过客户端的自动升级功能获得更新。客户端与服务器通信的所有协议格式中，<strong>自动升级协议</strong>是最重要的一个，无论版本如何迭代，一定要保证自动升级协议的新旧兼容。</p>
+</li>
+</ol>
+<h3 id="包分片"><a href="#包分片" class="headerlink" title="包分片"></a>包分片</h3><p>应用层对包拆分。当一个包的数据大过一个包的最长长度时需要对包进行分片。实际应用中一般会根据业务需求对包的类型进行编号，某些业务类型某次携带的数据可能较大需要将该数据拆分成多个包片，但其业务号隶属于同一个包。</p>
+<p>提供两种思路：</p>
+<ol>
+<li>设置分片标志。包头设置一个字段表示当前包是否属于某个大包的分片，该标志一般有四种取值：无分片标志、第一个分片标志、最后一个分片标志、第一个与最后一个之间的包分片标志。</li>
+<li>在每个包分片的包头部分都有该包的总分片长度和当前分片编号。</li>
+</ol>
+<h3 id="XML与JSON格式的协议"><a href="#XML与JSON格式的协议" class="headerlink" title="XML与JSON格式的协议"></a>XML与JSON格式的协议</h3><p>XML和JSON这两种格式由于其良好的自我解释性，是开发中使用非常广泛的两种数据格式。但很少单独用来作为网络通信协议的，其原因是在给数据包分界得到一个个完整的包时非常不便。对于不确定长度的XML和JSON字符串，在频繁进行数据交换的网络通信程序中，每次解包都要遍历一次以寻找特定的包结束符。</p>
+<p>一般作为某个协议的一部分出现。</p>
+<h3 id="一个自定义协议示例"><a href="#一个自定义协议示例" class="headerlink" title="一个自定义协议示例"></a>一个自定义协议示例</h3><p>自定义一个包含包头和包体两部分，包头：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> pack(push, 1)</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">chat_msg_header</span> &#123;</span></span><br><span class="line">    <span class="type">char</span>	compressflag;	<span class="comment">//压缩标志，为1启用压缩</span></span><br><span class="line">    <span class="type">int32_t</span>	originsize;		<span class="comment">//包体压缩前大小</span></span><br><span class="line">    <span class="type">int32_t</span>	compresssize;	<span class="comment">//包体压缩后大小</span></span><br><span class="line">    <span class="type">char</span>	reserved[<span class="number">16</span>];	<span class="comment">//保留字段，用于将来扩展</span></span><br><span class="line">&#125;；</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> pack(pop)</span></span><br></pre></td></tr></table></figure>
+
+<p>包体：假设是一个聊天内容协议，发送方示例代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">std::string outbuf;</span><br><span class="line"><span class="function">net::BinaryStreamWriter <span class="title">writeStream</span><span class="params">(&amp;outbuf)</span></span>;</span><br><span class="line">writeStream.<span class="built_in">WriteInt32</span>(msg_type_chat);	<span class="comment">//消息类型</span></span><br><span class="line">writeStream.<span class="built_in">WriteInt32</span>(m_seq);			<span class="comment">//消息序号</span></span><br><span class="line">writeStream.<span class="built_in">Write</span>(senderId);			<span class="comment">//发送者ID</span></span><br><span class="line">writeStream.<span class="built_in">WriteString</span>(chatMsg);		<span class="comment">//消息内容</span></span><br><span class="line">writeStream.<span class="built_in">WriteInt32</span>(receiverId);		<span class="comment">//接收者ID</span></span><br><span class="line">writeStream.<span class="built_in">flush</span>();</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="理解HTTP"><a href="#理解HTTP" class="headerlink" title="理解HTTP"></a>理解HTTP</h3><h4 id="HTTP格式"><a href="#HTTP格式" class="headerlink" title="HTTP格式"></a>HTTP格式</h4><p>HTTP是建立在TCP之上的应用层协议，其格式如下：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET 或 POST 请求的URL路径（一般是去掉域名的路径） HTTP协议版本号\r\n</span><br><span class="line">字段1名: 值\r\n</span><br><span class="line">字段2名: 值\r\n</span><br><span class="line">...</span><br><span class="line">字段n名: 值\r\n</span><br><span class="line">\r\n</span><br><span class="line">HTTP包体内容</span><br></pre></td></tr></table></figure>
+
+<p>HTTP请求的方法有<code>GET</code>、<code>POS</code>、<code>HEAD</code>、<code>PUT</code>、<code>DELETE</code>等，假设在浏览器中请求访问“<a target="_blank" rel="noopener" href="http://www.hootina.org/index_2013.php%E2%80%9D%E6%B5%8F%E8%A7%88%E5%99%A8%E7%BB%84%E8%A3%85%E7%9A%84HTTP%E6%95%B0%E6%8D%AE%E5%8C%85%E6%A0%BC%E5%BC%8F%E5%A6%82%E4%B8%8B%EF%BC%9A">http://www.hootina.org/index_2013.php”浏览器组装的HTTP数据包格式如下：</a></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/index_2013.php</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>www.hootina.org</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/112.0</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8</span><br><span class="line"><span class="attribute">Accept-Language</span><span class="punctuation">: </span>zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2</span><br><span class="line"><span class="attribute">Accept-Encoding</span><span class="punctuation">: </span>gzip, deflate</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive</span><br><span class="line"><span class="attribute">Upgrade-Insecure-Requests</span><span class="punctuation">: </span>1</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>get请求一般只有包头没有包体，且携带的参数放在url后面，参数与参数之间使用<code>&amp;</code>分割。浏览器对URL的长度最大值有限制，因此GET参数数量和长度也有限制。</p>
+<p>使用12306查询功能看POST方法：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/otn/logsdk/getInfo</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>kyfw.12306.cn</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/112.0</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>*/*</span><br><span class="line"><span class="attribute">Accept-Language</span><span class="punctuation">: </span>zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2</span><br><span class="line"><span class="attribute">Accept-Encoding</span><span class="punctuation">: </span>gzip, deflate, br</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>text/plain;charset=UTF-8</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>1629</span><br><span class="line"><span class="attribute">Origin</span><span class="punctuation">: </span>https://www.12306.cn</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>keep-alive</span><br><span class="line"><span class="attribute">Referer</span><span class="punctuation">: </span>https://www.12306.cn/</span><br><span class="line"><span class="attribute">Sec-Fetch-Dest</span><span class="punctuation">: </span>empty</span><br><span class="line"><span class="attribute">Sec-Fetch-Mode</span><span class="punctuation">: </span>cors</span><br><span class="line"><span class="attribute">Sec-Fetch-Site</span><span class="punctuation">: </span>same-site</span><br><span class="line"></span><br><span class="line"><span class="language-json"><span class="punctuation">&#123;</span><span class="attr">&quot;secretInfo&quot;</span><span class="punctuation">:</span><span class="string">&quot;m4sy+IAEaymsJ3g5ExCY7H7....&quot;</span><span class="punctuation">&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>post方法请求的数据被放在HTTP包体中，包体长度由1）HTTP chunk；2）包头的Content-Length字段表示。</p>
+<h4 id="HTTP-chunk编码"><a href="#HTTP-chunk编码" class="headerlink" title="HTTP chunk编码"></a>HTTP chunk编码</h4><p>HTTP在传输过程中包体过大，比如使用HTTP上传要给大文件，或传输动态产生的内容给对端，传输方无法预知要传输多大，就可以使用HTTP<strong>chunk编码技术</strong>。</p>
+<p>原理：将整个HTTP包体分成多个小块，每一块都有自己的字段来说明自身的长度，对端收到这些块后去除说明部分将多个小块合并在一起得到完整的包体内容。传输方在HTTP包头设置了<code>Transfer-Encoding: chunked</code>来告知对端该数据是分块传输的（代替Content-Length字段）。</p>
+<p>分块传输的编码格式：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[chunkSize][\r\n][chunkData][\r\n][chunkSize][\r\n][chunkData][\r\n]</span><br><span class="line">[chunkSize=0][\r\n][\r\n]</span><br></pre></td></tr></table></figure>
+
+<h4 id="libcurl"><a href="#libcurl" class="headerlink" title="libcurl"></a>libcurl</h4><p>是一个被广泛使用的跨平台的用于发送HTTP请求的第三方C/C++库。</p>
+<h4 id="Restful接口与Java-Spring-MVC"><a href="#Restful接口与Java-Spring-MVC" class="headerlink" title="Restful接口与Java Spring MVC"></a>Restful接口与Java Spring MVC</h4><p>建议提供HTTP接口的Web服务都遵循Restful设计风格，这是一种将HTTP URL的路径定义为可对资源类型和特性进行描述的规范。</p>
+<h3 id="SMTP、POP3与邮件客户端"><a href="#SMTP、POP3与邮件客户端" class="headerlink" title="SMTP、POP3与邮件客户端"></a>SMTP、POP3与邮件客户端</h3><h4 id="邮件协议简介"><a href="#邮件协议简介" class="headerlink" title="邮件协议简介"></a>邮件协议简介</h4><p>与邮件收发有关的协议：</p>
+<ol>
+<li><strong>POP3</strong>（Post Office Protocol 3，邮局协议的第3各版本）规定了怎样将个人计算机连接到Internet的邮件服务器和下载电子邮件的电子协议，是因特网电子邮件第1个离线协议标准，允许用户从服务器上把邮件存储到本地主机，同时删除保存在邮件服务器上的邮件。</li>
+<li><strong>SMTP</strong>（Simple Mail Transfer Protocol，简单邮件传输协议）是一组用于从源地址到目的地址传输邮件的规范，帮助每台计算机在发送或中转邮件时找到下一个目的地。</li>
+<li><strong>IMAP</strong>（Internet Mail Access Protocol，交互式邮件存取协议）是与POP3协议类似的邮件访问标准协议之一。不同的是，开启了IMAP后，在电子邮件客户端收取的邮件仍然保留在服务器上，同时客户端上的操作都会被反馈到服务器上，例如删除邮件、标记已读等。</li>
+</ol>
+<h4 id="SMTP"><a href="#SMTP" class="headerlink" title="SMTP"></a>SMTP</h4><p>SMTP用于发送邮件，格式如下：</p>
+<p><code>关键字 自定义内容\r\n </code></p>
+<h4 id="POP3"><a href="#POP3" class="headerlink" title="POP3"></a>POP3</h4><h3 id="WebSocket协议"><a href="#WebSocket协议" class="headerlink" title="WebSocket协议"></a>WebSocket协议</h3><p>用于解决HTTP通信的无状态、短连接（一般是）和服务端无法主动向客户端推送数据等问题而开发的协议，基于TCP。双方进行TCP三次握手后还要进行一次握手，这次握手的报文格式是基于HTTP改造的。</p>
+<h4 id="WebSocket协议握手过程"><a href="#WebSocket协议握手过程" class="headerlink" title="WebSocket协议握手过程"></a>WebSocket协议握手过程</h4><p>一方向另一方发送一个HTTP格式报文，格式大体如下：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/realtime</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>127.0.0.1:9999			#必要</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>Upgrade				#必要</span><br><span class="line"><span class="attribute">Pragma</span><span class="punctuation">: </span>no-cache</span><br><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>no-cache</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Window NT 10.0; Win64; x64)</span><br><span class="line"><span class="attribute">Upgrade</span><span class="punctuation">: </span>websocket				#必要</span><br><span class="line"><span class="attribute">Origin</span><span class="punctuation">: </span>http://xyz.com			#必要</span><br><span class="line"><span class="attribute">Sec-WebSocke-Version</span><span class="punctuation">: </span>13							#必要</span><br><span class="line"><span class="attribute">Accept-Encoding</span><span class="punctuation">: </span>gzip, deflate, br</span><br><span class="line"><span class="attribute">Accept-Language</span><span class="punctuation">: </span>zh-CN,zh;q=0,en;q=0.8</span><br><span class="line"><span class="attribute">Sec-WebSocket-Key</span><span class="punctuation">: </span>IqcAWodjyPDJuhGgZwkpkg==			#必要</span><br><span class="line"><span class="attribute">Sec-WebSocket-Extenstions</span><span class="punctuation">: </span>permessage-deflate; client_max_window_bits	#可能</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>对端支持WebSocket协议会回复一个HTTP格式的应答，应答报文格式：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">HTTP/1.1</span> <span class="number">101</span> Switching Protocols</span><br><span class="line"><span class="attribute">Update</span><span class="punctuation">: </span>websocket</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>Upgrade</span><br><span class="line"><span class="attribute">Sec-WebSocket-Accept</span><span class="punctuation">: </span>5wC5L6joP6t13lrpj1O1CNv9Jy4=</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>握手完成后双方就可以保持连接并相互发送数据了。</p>
+<h4 id="WebSocket协议格式"><a href="#WebSocket协议格式" class="headerlink" title="WebSocket协议格式"></a>WebSocket协议格式</h4><p>除了握手使用的是HTTP数据格式，之后通信双方使用的是另一种自定义格式。每个WebSocket数据包都被称为一个Frame。</p>
+<img src="D:\blog\source\_posts\C-服务开发精髓.assets\image-20230707171548860.png" alt="image-20230707171548860" style="zoom: 33%;" />
+
+<p><strong>第1字节</strong>：</p>
+<ul>
+<li><strong>FIN标志</strong>：1bit，分片是否结束，0表示当前包未结束，1表示当前包已结束。</li>
+<li><strong>RSV1、RSV2、RSV3</strong>：各1bit，保留字段，默认0.</li>
+<li><strong>opcode</strong>：4bits，操作类型</li>
+</ul>
+<p><strong>第2字节</strong>：</p>
+<ul>
+<li><strong>MASK标志</strong>：1bit，1表示Frame在包体长度字段后面携带4字节的maksing-key信息，0没有。</li>
+<li><strong>Payload len</strong>：7bits，包体的长度。表示范围0~127，其中126和127被当作特殊标志使用。值为0 ~125直接表示包体内容（Payload Data）长度；为126时，接下来两字节的内容（Extended payload length）表示包体内容长度，最大65535。包体长度超过65535应将Payload len设置为127，用接下来的8字节的内容表示包体内容长度。</li>
+<li><strong>Masking-key</strong>：mask为1才存在。4bytes。用来与payload data原始数据内容进行一些运算。</li>
+</ul>
+<h4 id="WebSocket协议压缩格式"><a href="#WebSocket协议压缩格式" class="headerlink" title="WebSocket协议压缩格式"></a>WebSocket协议压缩格式</h4><p>是否开启需要在握手时协商，在<code>Sec-WebSocket-Extensions</code>字段加上<code>premessage-deflate</code>标志。如果对端也支持压缩也同样设置该标志。</p>
+<h2 id="单个服务的基本结构"><a href="#单个服务的基本结构" class="headerlink" title="单个服务的基本结构"></a>单个服务的基本结构</h2><h3 id="网络通信组件的效率问题"><a href="#网络通信组件的效率问题" class="headerlink" title="网络通信组件的效率问题"></a>网络通信组件的效率问题</h3><h4 id="网络通信框架的设计原则"><a href="#网络通信框架的设计原则" class="headerlink" title="网络通信框架的设计原则"></a>网络通信框架的设计原则</h4><ol>
+<li><strong>尽量少等待</strong>：比如一些调用会阻塞线程。应使用I/O复用技术。</li>
+<li><strong>尽量减少做无用功时间</strong>：比如使用epoll而不是select和poll，因为select和poll需要主动查询，而epoll是被动通知。比如某个socket失效就及时从IO复用API上移除，否则可能死循环或浪费CPU检测周期。</li>
+</ol>
+<h4 id="唤醒机制"><a href="#唤醒机制" class="headerlink" title="唤醒机制"></a>唤醒机制</h4><ol>
+<li><p>使用管道fd（pipe）</p>
+</li>
+<li><p>使用Linux2.6新增的eventfd</p>
+<p> <code>int event(unsigned int initval, int flags);</code></p>
+</li>
+<li><p>使用socketpair</p>
+</li>
+</ol>
+<h3 id="收发数据的正确做法"><a href="#收发数据的正确做法" class="headerlink" title="收发数据的正确做法"></a>收发数据的正确做法</h3><h4 id="收取数据"><a href="#收取数据" class="headerlink" title="收取数据"></a>收取数据</h4><p>将clientfd绑定到IO复用函数并监听可读事件。可读事件触发调用recv函数收取数据。可收取部分数据也可一次性收完。<strong>收完数据的标志是recv或read函数返回-1，错误码errno为EAGAIN</strong>。</p>
+<h4 id="发送数据"><a href="#发送数据" class="headerlink" title="发送数据"></a>发送数据</h4><p>使用epoll的LT模式和其它IO复用函数不会一开始就为client注册监听可写事件，因为对端正常收取数据就不会出现因TCP窗口太小导致本端send和write函数无法写成功的问题。</p>
+<p>有数据发送，一般是先调用send或write函数直接发送，如果发送过程中返回-1错误码为EAGAIN或未全部发送完才会注册可写事件，并将剩余数据存入自定义的socket发送缓冲区。无数据发送则立即移除对写事件监听。</p>
+<p>epoll LT模式注册监听一次写事件后，触发发送数据未发送完也不需要重复注册，因为上次注册还有效。epoll ET模式注册监听一次写事件后，触发发送数据未发送完需要再次注册。</p>
+<p><strong>实际开发中，对于一段数据反复发送都不能完全发送完的场景，我们可以设置一个最大发送次数或最大发送总时间限制，超过这些限制后，可以认为对端出了问题立即清空发送缓冲区并关闭相应的连接</strong>。</p>
+<h4 id="不要多线程用一个socket收发数据"><a href="#不要多线程用一个socket收发数据" class="headerlink" title="不要多线程用一个socket收发数据"></a>不要多线程用一个socket收发数据</h4><p>实际开发中，有不少应用对同一个socket收取数据使用一个线程，发送数据使用另一个线程，但是需要额外做一些工作以同步收发两个线程中的socket的出错状态。</p>
+<p>但<strong>一定不要多个线程同时使用一个socket发送数据，或多个线程同时使用一个socket收取数据</strong>。</p>
+<h3 id="发送、接收缓冲区的设计要点"><a href="#发送、接收缓冲区的设计要点" class="headerlink" title="发送、接收缓冲区的设计要点"></a>发送、接收缓冲区的设计要点</h3><h4 id="为什么需要缓冲区"><a href="#为什么需要缓冲区" class="headerlink" title="为什么需要缓冲区"></a>为什么需要缓冲区</h4><p>网络层发送数据过程中，由于TCP窗口太小会导致数据无法发送出去，而上层可能不断产生新的数据，此时需要将数据先存储起来，等socket可写时再次发送，这个存储数据的地方叫<strong>发送缓冲区</strong>。</p>
+<p>收到数据后，可以直接对其进行解包，但是这样做并不好，理由如下：</p>
+<ul>
+<li>除了一些通用协议格式，大多数业务使用的都是自定义协议格式，也就是对一个数据包的数据格式的解读应该是业务层做的。不同业务有不同的协议格式，网络通信层一般不知道也不需要知道上层协议数据的具体格式，让网络层与业务层解耦。</li>
+<li>即使知道协议格式，由于TCP是流式协议，某一次收到的数据长度也不一定够一个完整的包大小，此时需要一个地方将这些不完整的数据先缓存起来，以便等数据包完整后再处理。</li>
+<li>即便接收到一个完整的包，但出于一些特殊的业务逻辑要求，仍需要将收到的数据暂时缓存起来，等满足一定要求再取出来处理。</li>
+</ul>
+<p>鉴于以上理由，网络层还是需要一个<strong>接收缓冲区</strong>。</p>
+<h4 id="如何设计缓冲区"><a href="#如何设计缓冲区" class="headerlink" title="如何设计缓冲区"></a>如何设计缓冲区</h4><p>无论是发送缓冲区还是接收缓冲区，一般都建议将其设计成一个<strong>内存连续的存储容器</strong>。当然也可设计成不连续的内存，如链表结构，但存储数据时相对麻烦。</p>
+<p>通常情况，发送缓冲区和接收缓冲区根据功能至少要提供两类接口，即存数据接口和取数据接口。</p>
+<p>缓冲区容量设置，应像<code>string</code>和<code>vector</code>一样，设计出一个容量可以动态增加的结构，按需分配，容量不够时可以扩展容量。</p>
+<p>对于收发缓冲区还要考虑缓冲区可能存入各种类型的数据，也就需要缓冲区结构提供写入和读取这些数据类型的接口。</p>
+<p>对于接收缓冲区，可能需要从接收缓冲区中寻找特殊的标志，例如某个业务的数据包以<code>\n</code>为结束标志，我们就需要在其中寻找它来确定缓冲区中的数据长度是否足够一个包的长度。</p>
+<p>关于收发缓冲区还要另外强调几点：</p>
+<ul>
+<li>对于服务端程序，由于需要同时提供服务多个客户端，每一路连接都会有一个接收缓冲区和发送缓冲区。</li>
+<li>缓冲区的容量上限一般是有限制的，且上限值一般不会太大。</li>
+<li>发送缓冲区如果较长时间内发送缓冲区中的数据都未发送出去，可认为这路连接出了问题，可将该缓冲区回收并关闭连接。</li>
+<li>接收缓冲区一直有数据滞留甚至积压，要好好检查自己处理数据的逻辑是否有问题。实际开发中，对端短时间内向服务器发送了大量数据，此时需要做一个限制策略，例如3秒内某路连接接收缓冲区中的数据已经达到30MB，这是可以设置一个标志，不再从该路连接的socket上继续读取数据，直到接收缓冲区中的数据被处理掉一部分，再清除该标志，以便继续从该连接的socket上读取数据。这是一种常见的对单个连接<strong>限流策略</strong>。</li>
+</ul>
+<h4 id="服务端发送数据对端一直不接收的问题"><a href="#服务端发送数据对端一直不接收的问题" class="headerlink" title="服务端发送数据对端一直不接收的问题"></a>服务端发送数据对端一直不接收的问题</h4><p>跨部分或与外部开发人员合作时，有一种情形：服务器对外提供服务，已规定好协议格式，客户端由外部人员开发。服务端像对端发送数据时，对端可能出现一问题一直不从socket上收取数据，但服务器可能会定期产生一些数据发送给客户端，发送一段时间后，由于TCP窗口太小，导致数据发送不出去，这样待发送的数据会在服务端相应连接的发送缓冲区积压，如果不做任何处理，服务很快因为内存耗尽而被操作系统杀死。</p>
+<p>两方面增加防御措施：</p>
+<ul>
+<li>为每路连接的发送缓冲区设置上限，超过上限直接关闭连接并回收相应资源。</li>
+<li>如果一些原因导致一部分数据在发送缓冲区积压但未达到上限，如果不做任何处理，就会一直积压，白白浪费系统资源。这种情形，一般设置一个定时器，每隔一段时间（如6秒）检查一下各路连接的发送缓冲区中是否还有数据未发送出去。超时可认为连接出现问题，需要关闭来连接并回收相应资源。</li>
+</ul>
+<h3 id="网络库的分层设计"><a href="#网络库的分层设计" class="headerlink" title="网络库的分层设计"></a>网络库的分层设计</h3><h4 id="网络库设计中的各个层"><a href="#网络库设计中的各个层" class="headerlink" title="网络库设计中的各个层"></a>网络库设计中的各个层</h4><ol>
+<li><strong>Session层</strong>：用于记录各种业务状态数据和处理各种业务逻辑。业务逻辑处理完毕后，如果需要及进行网络通信，则依赖于Connection层进行数据收发。</li>
+<li><strong>Connection层</strong>：每一路客户端连接都对应一个Connection对象，该层一般用于记录连接的各种状态信息。常见状态信息有连接状态、数据收发缓冲区信息、数据流量信息、本端和对端的地址和端口号信息等，同时提供对各种网络事件的处理接口，这些接口或被本层自己使用，或被Session层使用。Connection持有一个Channel对象，而且掌管Channel对象的生命周期。</li>
+<li><strong>Channel层</strong>：一般持有一个socket句柄，是实际进行数据收发的地方，因而一个Channel对象会记录当前需要监听的各种网络事件（读写和出错事件）的状态，同时提供对这些事件状态的查询和增删改接口。部分网络库实现中，Channel对象管理socket对象的生命周期，因此Channel对象需要提供创建和关闭socket对象的接口；而另外一些网络库实现中由Connection对象直接管理socket对象的生命周期，也就是没有Channel层。所以该层不是必需的。</li>
+<li><strong>Socket层</strong>：这一层通常只是对常用的socket函数进行封装，例如屏蔽不同操作系统socket函数的差异性来实现跨平台。该层也不是必需的。</li>
+</ol>
+<p>对于服务端程序，抛开业务本身，从技术层面上来说，我们需要一个<strong>Server对象</strong>（如TcpServer）来集中管理多个Connection对象。</p>
+<p>对于客户端程序，同样可以设计出一个TcpClient对象来管理各个Connector（连接器对象）。</p>
+<p>Session对象虽然与Connection对象一一对应，但在业务层需要有专门的类来管理这些Session对象的生命周期，一般把这个专门的类称为SessionManager或者SessionFactory。</p>
+<h4 id="将Session进一步分层"><a href="#将Session进一步分层" class="headerlink" title="将Session进一步分层"></a>将Session进一步分层</h4><p>不同的服务其业务可能千差万别，实际开发中，可以根据业务场景将Session层进一步拆分成多个层，使每一层都专注于自己的业务逻辑。例如有一个需要支持聊天消息压缩的即时通信服务，可以将Session划分为三个层，从上到下依次是ChatSession、CompressionSession和TcpSession。ChatSession负责处理聊天业务本身，CompressSession负责数据的解压缩，TcpSession负责将数据加工成网络层需要的格式或将网络层发送的数据还原成业务需要的格式（如数据装包和解包）。</p>
+<h3 id="后端服务中的定时器设计"><a href="#后端服务中的定时器设计" class="headerlink" title="后端服务中的定时器设计"></a>后端服务中的定时器设计</h3><p>定时器模块是后端服务常用的功能之一，用于周期性地执行某些任务的场景中。设计定时器模块的方法有很多，但关键是定时器的效率问题。</p>
+<h4 id="最简单的定时器"><a href="#最简单的定时器" class="headerlink" title="最简单的定时器"></a>最简单的定时器</h4><p>一个最简单的定时器功能实现如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span>* <span class="title">threadFunc</span><span class="params">(<span class="type">void</span>* arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span>(m_bRunning) &#123;</span><br><span class="line">        <span class="built_in">sleep</span>(<span class="number">3000</span>);</span><br><span class="line">        <span class="comment">//检测所有会话的心跳</span></span><br><span class="line">        <span class="built_in">checkSessionHeartbeat</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种做法很粗暴，但来源于一个真实的商业项目。一些特殊场景下确实可以这样。只不过可以将sleep函数换成一些可以设置超时或等待时间的、让线程挂起或等待的函数（如select、poll等）。</p>
+<h4 id="定时器设计的基本思路"><a href="#定时器设计的基本思路" class="headerlink" title="定时器设计的基本思路"></a>定时器设计的基本思路</h4><p>根据实际的场景需求，定时器对象一般需要一个<strong>唯一标识、过期时间、重复次数、定时器到期触发的动作</strong>，因此定时器对象可被设计为如下结构：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> std::function&lt;<span class="type">void</span>()&gt; TimerCallback;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Timer</span> &#123;</span><br><span class="line">    <span class="built_in">Timer</span>();</span><br><span class="line">    ~<span class="built_in">Timer</span>();</span><br><span class="line">    <span class="type">void</span> run &#123;</span><br><span class="line">        <span class="built_in">callback</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//其它实现。。。</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="type">int64_t</span>			m_id;				<span class="comment">//定时器唯一标识</span></span><br><span class="line">    <span class="type">time_t</span>			m_expiredTime;		<span class="comment">//定时器到期时间</span></span><br><span class="line">    <span class="type">int32_t</span>			m_repeatedTimes;	<span class="comment">//定时器重复触发次数</span></span><br><span class="line">    TimerCallback	m_callback;			<span class="comment">//定时器触发后的回调函数</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>回调函数中<code>m_callback</code>中不能有耗时或者阻塞线程的操作，否则会影响整个循环流，需要将这些耗时或者阻塞的操作移到其它线程中。</p>
+<h4 id="定时器逻辑的性能优化"><a href="#定时器逻辑的性能优化" class="headerlink" title="定时器逻辑的性能优化"></a>定时器逻辑的性能优化</h4><p>使用<code>std::list</code>管理定时器，每次检测定时器对象是否触发时都要遍历整个定时器集合，移除也需要。可以将定时器对象按过期时间从小到大排序，这样只要从最小过期时间开始检测即可，一旦找到当前时间的定时器对象就不需要继续检测了。可以在每次添加时进行一次排序。执行时如果该定时器会重复触发，也需要一次排序。移除还是需要遍历。</p>
+<p>为提高定时器的效率，一般采用两种常用的方法：<strong>时间轮</strong>和<strong>时间堆</strong>。</p>
+<p>时间轮的基本思想是将现在时刻t加上一个时间间隔interval，以interval为步长，将各个定时器对象的过期时间按步长分布在不同的时间槽中，当在一个时间槽中出现多个定时器对象时，这些定时器对象按加入槽的顺序串成链表。因为每个时间槽的时间间隔都是一定的，因此检测会有两种方法：</p>
+<ol>
+<li>每次检测时都判断当前系统时间处于哪个时间槽，比该槽序号小的槽中定时器都已到期。</li>
+<li>每次检测时都假设当前时间比之前相比跳动了一个时间轮的间隔。</li>
+</ol>
+<p>缺点是可能出现某个时间槽对应的链表过长。</p>
+<p>时间堆按过期时间大小从小到大排列。该效率比<code>std::list</code>和<code>std::map</code>要高。可以使用stl提供的<code>std::priority_queue</code>作为定时器的实现.</p>
+<h4 id="对时间的缓存"><a href="#对时间的缓存" class="headerlink" title="对时间的缓存"></a>对时间的缓存</h4><p>使用定时器功能，免不了使用获取操作系统时间的函数，而在大多数操作系统上，获取系统时间的函数都属于<strong>系统调用</strong>，耗时较多。为提高效率，在一些对事件要求精度不高的情况下，可缓存一些时间，在较近的下次如果需要系统时间，则可以使用上次缓存的时间，而不是再次系统调用。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(!m_bQuitFlag) &#123;</span><br><span class="line">    <span class="comment">//第1次获取系统时间，并缓存</span></span><br><span class="line">    <span class="built_in">get_system_time_and_cache</span>();</span><br><span class="line">    <span class="comment">//利用上一步获取的系统时间进行一些耗时短的操作</span></span><br><span class="line">    <span class="built_in">do_something_quickly_with_system_timer</span>();</span><br><span class="line">    <span class="comment">//这里可以不用再次获取系统时间，而是将第1步缓存的时间作为当前系统时间</span></span><br><span class="line">    <span class="built_in">use_cached_time_to_check_and_handle_timer</span>();</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">epoll_or_select_func</span>();</span><br><span class="line">    <span class="built_in">handle_io_events</span>();</span><br><span class="line">    <span class="built_in">handle_other_things</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>定时器关键点是如何为定时器对象设计出高效的数据结构，使每次从定时器集合中增加、删除、修改和遍历定时器对象时更加高效</strong>。为了进一步提高定时器逻辑的执行效率，可利用上次缓存的系统时间避免再次系统调用。还要考虑如<strong>服务器时间被人为提前或延后，以及定时器事件时间精度等</strong>。</p>
+</blockquote>
+<h3 id="处理业务数据是否要单开线程"><a href="#处理业务数据是否要单开线程" class="headerlink" title="处理业务数据是否要单开线程"></a>处理业务数据是否要单开线程</h3><p>在业务逻辑比较简单、耗时短的情况下，可以在<code>handle_io_events</code>方法中除了收发数据，也可直接用来做业务逻辑处理。</p>
+<p>对于业务逻辑处理过程比较耗时（如从数据库取大量文件、写文件），会导致网络线程在这些操作上停留事件很长，影响网络事件的检测和数据的收发的及时性。需要及那个业务处理逻辑单独拆分出来交给另外的业务工作线程处理。对于网络线程将业务数据包交给业务线程时可以使用一个共享的数据<strong>队列</strong>实现，网络线程为生产者，业务线程为消费者。而业务线程如果有数据要发送则要将数据交给网络线程，一般有三种方法：</p>
+<ol>
+<li><p>直接调用相应的发送数据的方法。这可能导致网络线程和业务线程同时对同一个socket写，会导致同一个连接上的数据顺序有问题。<strong>应该要利用锁机制</strong>。但发送还是应该是网络线程干的事！</p>
+</li>
+<li><p>存在定时器结构的情况下，业务线程可以将需要发送的数据放如另一个共享区域中（如TcpConnection对象的一个成员变量中），定时器定时将从这个共享区域取出来再发送出去。但会使逻辑复杂，且隔一段事件才能触发会有延迟。</p>
+</li>
+<li><p>利用线程执行流中的<code>handle_other_things</code>方法。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(!m_bQuitFlag) &#123;</span><br><span class="line">    <span class="built_in">epoll_or_select_func</span>();</span><br><span class="line">    <span class="built_in">handle_io_event</span>();</span><br><span class="line">    <span class="built_in">handle_other_things</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 这个函数可以在需要执行时通过唤醒机制唤醒。</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>强调</strong>：利用<code>handle_io_events</code>或<code>handle_other_things</code>方法处理业务逻辑，仅适用于业务逻辑中不会有耗时操作的场景，如果有还是要单独开业务线程。</p>
+</blockquote>
+<h3 id="非侵入式结构与侵入式结构"><a href="#非侵入式结构与侵入式结构" class="headerlink" title="非侵入式结构与侵入式结构"></a>非侵入式结构与侵入式结构</h3><h4 id="非侵入结构"><a href="#非侵入结构" class="headerlink" title="非侵入结构"></a>非侵入结构</h4><p>非侵入式，指的是一个服务中的所有通信或业务数据都在网络通信框架内部流动，也就是说没有外部数据源注入网络通信模块或从网络通信模块中流出。</p>
+<h4 id="侵入式结构"><a href="#侵入式结构" class="headerlink" title="侵入式结构"></a>侵入式结构</h4><p>如果有外部消息流入网络通信模块或从网络通信模块流出，就相当于有外部消息“侵入”网络通信结构，这种服务器结构称为侵入式服务结构。</p>
+<h3 id="带有网络通信模块的服务器的经典结构"><a href="#带有网络通信模块的服务器的经典结构" class="headerlink" title="带有网络通信模块的服务器的经典结构"></a>带有网络通信模块的服务器的经典结构</h3><h4 id="为何listenfd设为非阻塞"><a href="#为何listenfd设为非阻塞" class="headerlink" title="为何listenfd设为非阻塞"></a>为何listenfd设为非阻塞</h4><p>如果需要使用IO复用函数统一管理各个fd则需要将clientfd设置为非阻塞。如果不用IO服用函数管理listenfd就不需要设为非阻塞，这样accept函数没有新连接时就会阻塞。</p>
+<ol>
+<li><p><strong>结构一：listenfd阻塞模式，为listenfd独立分配一个接受连接线程</strong></p>
+<p> accept返回的clientfd交给其它IO线程，可以加到accept线程和其它IO线程共享的vector中，然后IO线程函数中加上从vector取fd加到epoll中的函数调用。注意跨线程要加锁。但还有点效率问题：某个时刻accept像vector添加了一个clientfd，此时io线程阻塞在epoll_wait处，就要唤醒epoll_wait。</p>
+</li>
+<li><p><strong>结构二：listenfd阻塞模式，使用同一个one thread one loop结构处理listenfd事件</strong></p>
+<p> 单独为listenfd分配一个线程是对资源的浪费。可将listenfd挂载到某个loop的epollfd上，在epoll_wait返回且listenfd有读事件时，调用accept函数就不会阻塞。</p>
+<p> 但这样每一轮循环只能接受一个连接，如果连接数较多，这种处理速度跟不上。</p>
+</li>
+<li><p><strong>结构三：listenfd非阻塞模式，使用同一个one thread one loop结构处理listenfd事件</strong></p>
+<p> 当listenfd上有读事件发生，可以反复调用accept函数，直到返回-1且错误码为EAGAIN。且可以控制一次接收多少连接。</p>
+</li>
+</ol>
+<h4 id="基于one-thread-one-loop结构的经典服务器结构"><a href="#基于one-thread-one-loop结构的经典服务器结构" class="headerlink" title="基于one thread one loop结构的经典服务器结构"></a>基于one thread one loop结构的经典服务器结构</h4><ol>
+<li><p><strong>listenfd单独使用一个loop，clientfd被分配至其它loop</strong></p>
+<p> listenfd被单独挂载到一个线程loop的epollfd上作为<strong>主线程</strong>，产生新的clientfd将其按一定的策略挂载到其它线程loop的epollfd上，这些线程称为<strong>工作线程</strong>。</p>
+<p> 可以使用轮询策略将clientfd均匀分配给其它工作线程。可做一些优化：各个loop可能因为clientfd断开导致数量差别大，可先查询各个工作loop的当前实际的clientfd数量，把新clientfd分配给持有fd最小的工作loop。</p>
+</li>
+<li><p><strong>listenfd不单独使用一个loop，将所有clientfd都按一定策略分配给各个loop</strong></p>
+<p> 对于一些建立和断开连接不是很频繁的场景，没必要让listenfd单独使用一个线程，因为这样场景下这个线程大部分处于空闲状态。</p>
+</li>
+<li><p><strong>listenfd和所有clientfd均使用一个loop</strong></p>
+<p> 一般用于整个loop都是高效的内存操作的情形。</p>
+</li>
+</ol>
+<p>这些结构不仅适用于多线程模型，也适用于多线程模型。只是原来同一个进程地址空间中可直接将一个clientfd数据投递给其它线程的方式，变成了利用进程通信技术将clientfd从主进程传递给工作进程。</p>
+<h3 id="服务器的性能瓶颈"><a href="#服务器的性能瓶颈" class="headerlink" title="服务器的性能瓶颈"></a>服务器的性能瓶颈</h3><p>按照业务类型不同，一般将服务器分为两类：<strong>I/O密集型</strong>和<strong>计算密集型</strong>。</p>
+<p>如果服务是I/O密集型，就需要将线程数量向网络通信组件倾斜，是计算密集型，就将线程数量向业务模块倾斜。</p>
+<h2 id="Redis网络通信模块源码分析"><a href="#Redis网络通信模块源码分析" class="headerlink" title="Redis网络通信模块源码分析"></a>Redis网络通信模块源码分析</h2><h2 id="服务器开发中的常用模块设计"><a href="#服务器开发中的常用模块设计" class="headerlink" title="服务器开发中的常用模块设计"></a>服务器开发中的常用模块设计</h2><h3 id="断线自动重连的应用场景和逻辑设计"><a href="#断线自动重连的应用场景和逻辑设计" class="headerlink" title="断线自动重连的应用场景和逻辑设计"></a>断线自动重连的应用场景和逻辑设计</h3><p>在有连接依赖关系的服务与服务之间或客户端与服务器之间，<strong>自动重连功能</strong>都是非常重要的。</p>
+<p>重连本身的功能开发很简单，其实就是<strong>调用connect函数不断重试</strong>，但重试有讲究：</p>
+<ol>
+<li><p>对于服务端程序，一段发现断开就立即尝试重连，连接不上则隔一段时间再重试直到连接成功，可等时间间隔。当然，在此期间可以发送报警邮件或输出错误日志。</p>
+</li>
+<li><p>对于客户端软件，以上做法可以但不是最优。客户端所处网络环境一般比服务器要恶劣，以相等的时间间隔定时重连，一般作用不大。因此一般会隔一个比前一次时间间隔更长的时间去重连。防止重连间隔太长，可以设置一个最大的重连时间间隔，之后恢复到之前较小的之间间隔。</p>
+<p> 但依然可能等的时间间隔较长，解决办法：网络发生波动，程序应该检测网络状态，如果网络状态恢复正常，就应该立即进行一次重连，而不是一成不变地按照设置的时间间隔重连。</p>
+</li>
+</ol>
+<p>设计重连还要考虑以下情形：</p>
+<ol>
+<li><p><strong>不需要重连的情形</strong></p>
+<p> （1）用户使用客户端主动放弃重连；（2）因为业务需要禁止客户端重连。</p>
+<p> 例如不允许多个设备同时在线，某个账号在A登录，接着又在B登录，就会把A的账户信息踢下线，此时A上的客户端就被设计成禁止自动重连。</p>
+</li>
+<li><p><strong>技术上的断线重连和业务上的断线重连</strong></p>
+<p> 技术上短线重连是调用connect函数来连接。但大多数系统只是技术上连接没有任何意义，连接成功后还需要再次向服务器发送账号验证信息等，在这些信息验签成功后才叫真正的重连成功。</p>
+</li>
+</ol>
+<h3 id="保活机制与心跳包"><a href="#保活机制与心跳包" class="headerlink" title="保活机制与心跳包"></a>保活机制与心跳包</h3><p>需要处理以下两种情形：</p>
+<ul>
+<li>情形一：服务器与某个客户端一般不在同一个网络中，它们之间可能经过数个路由器和交换机，如果某个必经的路由器或交换器出现故障，并一段时间内未恢复，而此时服务器与客户端没有数据交换。由于TCP连接是状态机，所以对于这种情形无论是客户端还是服务器，都无法感知与对方的连接是否正常，一般称为“死链”。</li>
+<li>情形二：一个客户端在连接服务器后，如果长时间没有和服务器有数据来往，则可能会被防火墙程序关闭连接，但我们并不像关闭。</li>
+</ul>
+<p>对于情形一的<strong>死链</strong>，此时在任意一端向对端发送一个数据包，即可检测链路是否正常，这类数据包称为==心跳包==，这种操作为<strong>心跳检测</strong>。若一个连接长时间没有正常数据来往，也没有心跳包来往就可认为该连接已不存在，为节约服务器连接资源，可通过关闭socket来回收连接资源。</p>
+<p>情形二的应用场景要求必须保持客户端与服务器之间的连接正常，只需要向对端发送心跳包即可实现<strong>保活</strong>。</p>
+<h4 id="TCP-keepalive选项"><a href="#TCP-keepalive选项" class="headerlink" title="TCP keepalive选项"></a>TCP keepalive选项</h4><p>操作系统的TCP/IP协议栈提供了<code>keepalive</code>选项用于socket的保活。Linux上可以通过代码启用一个socket的心跳检测：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> on = <span class="number">1</span>;</span><br><span class="line">setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &amp;on, <span class="keyword">sizeof</span>(on));</span><br></pre></td></tr></table></figure>
+
+<p>but,keepalive选项默认发送心跳检测数据包的<strong>时间间隔是7200秒（2hours）</strong>，实用性不强。</p>
+<p>当然可以通过继续设置keepalive相关的三个选项来改变这个时间间隔：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送keepalive报文的时间间隔</span></span><br><span class="line"><span class="type">int</span> val = <span class="number">7200</span>;</span><br><span class="line">setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &amp;val, <span class="keyword">sizeof</span>(val));</span><br><span class="line"><span class="comment">//两次重试报文的时间间隔</span></span><br><span class="line"><span class="type">int</span> interval = <span class="number">75</span>;</span><br><span class="line">setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &amp;interval, <span class="keyword">sizeof</span>(interval));</span><br><span class="line"><span class="comment">//重试次数</span></span><br><span class="line"><span class="type">int</span> cnt = <span class="number">9</span>;</span><br><span class="line">setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &amp;cnt, <span class="keyword">sizeof</span>(cnt));</span><br></pre></td></tr></table></figure>
+
+<p>可以通过<code>sysctl -a | grep keepalive</code>查看上面三个值的设置情况。</p>
+<h4 id="应用层的心跳包机制设计"><a href="#应用层的心跳包机制设计" class="headerlink" title="应用层的心跳包机制设计"></a>应用层的心跳包机制设计</h4><p>使用keepalive选项时需要对每个socket进行设置，而这不一定是必需的。可能产生大量无意义的带宽浪费，而且keepalive选项不能与应用层很好交互，因此实际服务开发，还是建议在应用层设计自己的心跳包机制。</p>
+<p>从技术上讲，心跳包其实就是一个预先规定好格式的数据包，在程序中启动一个定时器定时发送即可，这是最简单的实现思路。</p>
+<p>但若通信两端有频繁的数据来往，没必要到时就发心跳包。最佳做法是，记录最近一次收发数据包的时间，在每次收数据或发数据都更新这个时间，而心跳检测计时器在每次检测时都将这个时间与当前系统时间做比较，如果时间间隔大于允许的最大时间间隔（实际开发中根据需求设为15~45秒不等），则发送一次心跳包。</p>
+<p>一般是客户端主动向服务端发送心跳包，服务端做心跳检测来决定是否断开连接。如果客户端不能主动和其保持连接，就会主动回收与该客户端的连接。当然，服务端在收到客户端的心跳包时，应该给客户端一个心跳应答。</p>
+<h4 id="有代理的心跳包机制设计"><a href="#有代理的心跳包机制设计" class="headerlink" title="有代理的心跳包机制设计"></a>有代理的心跳包机制设计</h4><p>前面设计了通用的心跳包机制，但是该机制在一种情况下不适用，客户端通过代理服务器与后端服务器交互，后端服务器业务类型是订阅类型，也就是客户端一旦订阅某个类型的主题，就很少或者不再向服务器发送消息了，而后端服务会不断将客户端订阅的特定主题数据下发给客户端。</p>
+<p>如果后端服务更新心跳包时间戳使用最后一次的上行数据或下行数据的发包时间，则后端服务无法检测到客户端是否已经断开，因为后端服务器与代理服务器间的连接没问题。解决办法是：<strong>只依据上行数据来更新心跳包的时间戳</strong>。超过某段时间后若依然没有<strong>上行数据</strong>，则说明客户端已经断开。</p>
+<h4 id="带业务数据的心跳包"><a href="#带业务数据的心跳包" class="headerlink" title="带业务数据的心跳包"></a>带业务数据的心跳包</h4><p>上面纯从技术上讲，在实际应用中，我们有时需要定时或不定时地从服务端更新一些数据，可以把这类数据放在心跳包中。</p>
+<h4 id="心跳包与流量"><a href="#心跳包与流量" class="headerlink" title="心跳包与流量"></a>心跳包与流量</h4><p>为减轻网络带宽的压力和节省流量，设计心跳包数据格式时应该尽量减小心跳包的数据大小。</p>
+<h4 id="心跳包与调试"><a href="#心跳包与调试" class="headerlink" title="心跳包与调试"></a>心跳包与调试</h4><p>在开发和调试程序的过程中，可以将程序通过断点中断下来，等程序恢复执行连接可能因为心跳检测逻辑已经断开。</p>
+<p>由于一般更多关注业务数据处理而不想被一堆无意义的心跳包数据干扰。一般在调试模式下通过配置开关变量或条件编译选项关闭心跳包检测逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//配置开关变量</span></span><br><span class="line"><span class="keyword">if</span>(config.heartbeatCheckEnabled) &#123;</span><br><span class="line">    EnableHearbeatCheck();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//条件变量</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> _DEBUG</span></span><br><span class="line">	EnableHearbeatCheck();</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="心跳包与日志"><a href="#心跳包与日志" class="headerlink" title="心跳包与日志"></a>心跳包与日志</h4><p>实际生产环境中，一般会将程序收到的和发出去的数据包写入日志中，但无业务信息的心跳包信息是个例外。心跳包日志大量且无意义，一般不写入日志。</p>
+<p>可以将心跳包信息是否写入日志做成一个配置开关，一般处于关闭状态。</p>
+<h3 id="日志模块的设计"><a href="#日志模块的设计" class="headerlink" title="日志模块的设计"></a>日志模块的设计</h3><h4 id="为什么需要日志"><a href="#为什么需要日志" class="headerlink" title="为什么需要日志"></a>为什么需要日志</h4><p>生产环境下一般不允许开发人员直接调用调试器排查问题，这是可以通过打印日志，将当时程序行为上下文现场记录下来，然后从日志系统中找到某次不正常的行为的上下文信息。</p>
+<h4 id="日志系统的技术实现"><a href="#日志系统的技术实现" class="headerlink" title="日志系统的技术实现"></a>日志系统的技术实现</h4><p>日志最初原型是将程序运行状态打印出来，比如用<code>std::cout</code>等控制台输出函数。对于商业项目，一般将日志输出到文件或数据库系统。以写文件为例：</p>
+<ol>
+<li><p><strong>同步写日志</strong></p>
+<p> 在输出日志的地方将日志即时写入文件中。可能顾虑写文件操作会造成线程变慢。但一般不用担心：1）客户端程序即使主线程中同步写文件，其单次或几次磁盘操作累加时间与用户可感知时间相比也是非常小的，对于UI线程或高频操作要控制写入日志次数和长度。2）客户端程序除了UI线程，还有与界面无关的其它工作线程，在这些线程中直接写文件一般不会对体验产生影响。</p>
+<p> 出现的问题：</p>
+<ul>
+<li>同步的日志输出存在时间顺序不正确的问题，这是由于多线程同时写日志到同一个文件时，产生日志时间和实际写入磁盘的时间不是一个原子操作。好在不影响阅读。</li>
+<li>多个线程同时将日志写入同一个文件中还存在一个问题，就是假设线程A某个时刻向日志文件追加“AAAA”，线程B追加“BBBB”，最终日志变为“AABBAABB”。所幸，<strong>在类UNIX系统上（包括Linux），同一个进程内针对同意给FILE操作是线程安全的</strong>。不会出现上面情形。</li>
+</ul>
+</li>
+<li><p><strong>异步写日志</strong></p>
+<p> 同步写日志适用于对性能要求不高的应用。对于QPS要求很高或对性能有要求的服务器程序，同步日志造成性能损失。因此采用异步写日志。即在产生日志的地方不会讲日志写入文件中，而是通过线程同步技术将日志暂存下来，然后通过一个或多个专门的日志写入线程将其写入磁盘中。</p>
+<p> 可以使用一个队列来存储其它线程产生的日志，日志线程从该队列中取出日志，然后将该日志内容写入文件。如果队列无日志，日志线程会做无用功。</p>
+<ul>
+<li>优化方法一：可以使用条件变量，如果在当前队列中没有日志记录，就将日志消费线程挂起。</li>
+<li>优化方法二：除了条件变量，可以使用信号量来设计异步日志系统。</li>
+</ul>
+</li>
+<li><p><strong>日志的级别</strong></p>
+<p> 常见日志级别从高到低一般为<code>ERROR</code>、<code>WARNING</code>、<code>INFO</code>。有些会更细粒度级别，在INFO之下还有<code>TRACE</code>、<code>VERBOSE</code>,在ERROR上还有<code>FATAL</code>。</p>
+<ol>
+<li><p><code>FATAL</code>一般标记哪些无法让程序继续运行的错误，对于这种级别的日志处理，程序不仅记录一条日志，还会主动“崩溃”或退出。对于C++只要向内存地址为0处写入一个数据即可</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span>* p = <span class="number">0</span>;</span><br><span class="line">*p = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p> 达到FATAL级别的规则：程序中的一些关键性逻辑必须是正常且正确执行的，但其没有执行。如某个服务程序提供8888端口但程序启动时由于端口占用资源等原因无法对该端口监听，此时程序就没必要继续跑下去了。</p>
+<p> 该级别一般用于程序开发或者灰度发布早期阶段，便于尽早排查程序中存在的逻辑漏洞和错误。在程序稳定运行一段时间后，尤其发布到生产环境后，就尽量不要在程序中有这样的日志级别了。因为生产环境中，产品的崩溃尤其是服务器程序的宕机造成损失和影响很大。</p>
+</li>
+<li><p><code>ERROR</code>用的较多，一般用于记录在程序中产生的错误，例如某次请求超时、数据无应答、下载头像失败、写入数据库失败等。</p>
+</li>
+<li><p><code>WARNING</code>用于记录一些程序产生的但不太影响使用的错误。可以通过该类型的日志记录进一步优化我们的程序。</p>
+</li>
+<li><p><code>INFO</code>日志也很常用，一般用于记录程序运行过程总的各种状态信息、重要事件等。</p>
+</li>
+<li><p><code>TRACE</code>、<code>VERBOSE</code>一般用于在调试和测试阶段记录程序非常细粒度的代码执行情况。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>每行日志都应该包含哪些基本信息</strong></p>
+<p> 除了日志级别，一般包含该行写入时间、打印日志所在的线程ID、文件名、行号。</p>
+</li>
+<li><p><strong>日志文件命令规则</strong></p>
+<p> 常用方式是以服务的名称+日志创建时的系统时间戳为名称</p>
+</li>
+<li><p><strong>日志文件的大小控制</strong></p>
+<p> 一个日志文件的体积太大就难以打开，即使打开也会由于包含的信息巨大不利于查找我们需要的信息。实际开发中对单个日志文件的体积也会做一些限制，在超过某个大小时（如10MB），就重新创建一个新的日志文件来继续写。这个大小上限叫做<code>rollSize</code>。</p>
+<p> 产生大量日志文件也需要即使清理，可有在程序启动时或者在固定日期清理日志的功能</p>
+</li>
+</ol>
+<h4 id="在C-C-中输出网络数据包日志"><a href="#在C-C-中输出网络数据包日志" class="headerlink" title="在C/C++中输出网络数据包日志"></a>在C/C++中输出网络数据包日志</h4><p>对于C/C++，一般假定一个字符串最后有一个ASCII码值为0的字符标识字符串的结束标识。大多数API函数处理这个字符串时遇到这个标识就会停止处理。</p>
+<p>解决这类问题的方式通常有两种。第1种方式通过<strong>使用一些安全函数指定完整的字符串长度</strong>，而不是让函数通过“\0”来判断字符串是否结束：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">std::string str;</span><br><span class="line">str.<span class="built_in">append</span>((<span class="type">const</span> <span class="type">char</span>*)&amp;m);	<span class="comment">//错误，不要让其自动判断结束</span></span><br><span class="line">str.<span class="built_in">append</span>((<span class="type">const</span> <span class="type">char</span>*)&amp;m, <span class="built_in">sizeof</span>(m));	<span class="comment">//正确做法</span></span><br></pre></td></tr></table></figure>
+
+<p>另一种方式就是<strong>逐字节处理</strong>，尤其适用于处理网络通信双方收到的数据包。</p>
+<h4 id="调试时的日志"><a href="#调试时的日志" class="headerlink" title="调试时的日志"></a>调试时的日志</h4><p>一个设计良好的日志模块，对其输出媒介应该是灵活的。例如正式运行的程序，程序可以日志写入文件中；而对于被attach到调试器中的程序，程序可以将日志输出到控制台。</p>
+<h4 id="统计程序性能日志"><a href="#统计程序性能日志" class="headerlink" title="统计程序性能日志"></a>统计程序性能日志</h4><p>实际开发中，为了优化程序的执行速度，需要计算某段关键性的或者存在性能瓶颈的代码执行时间，将其记录到日志中。实现简单，即在某段代码开始和结束处分别记下系统时间，然后计算二者时间差。需要注意，操作系统提供了有不同时间精度的时间计算函数，而对一段代码的单词执行时间往往很短，所以选择计算时间的系统函数时要尽量选精度高一点的。</p>
+<h4 id="根据类型将日志写入不同的文件中"><a href="#根据类型将日志写入不同的文件中" class="headerlink" title="根据类型将日志写入不同的文件中"></a>根据类型将日志写入不同的文件中</h4><p>根据日志级别不同写入不同文件，比如ERROR级别可以写入<code>xxxx.error.log</code>文件中，开发人员每天只需检测日志目录是否有error.log文件，存在说明程序或业务一定有错误，对其重点排查即可。info级别一般是不开启，因为其输出非常细，一旦开启会产生大量日志记录。</p>
+<p>一般日志功能的开关被配置在配置文件中，在程序启动时加载，一旦加载就固定了，如何在程序运行时动态改变这个值？这就是<strong>热加载技术</strong>。实现方法有很多，例如可在程序中<strong>开启一个线程去检测日志文件的变更</strong>，有变更则使用最新的变更信息。还有一种方式<strong>使用监控端口</strong>，一般用于服务器程序中，在服务器程序中单独再开启一个监控端口，通过nc、telnet这样的命令连接到这个监控端口，然后输入预先设置好的命令开关相应的日志功能。</p>
+<h4 id="集中式日志服务与分布式日志服务"><a href="#集中式日志服务与分布式日志服务" class="headerlink" title="集中式日志服务与分布式日志服务"></a>集中式日志服务与分布式日志服务</h4><p>许多大型企业，由于一个功能复杂的软件可能被根据功能设计成多个模块，每个模块都可能是不同的部门或人员开发的，模块与模块之间可能只提供接口契约，所以每个模块有自己的日志输出，这样一个程序就可能产生多个日志文件。定位一个问题往往要穿梭于各个模块之间，非常麻烦。</p>
+<p>所以对于一组服务，有时会<strong>专门开发一个Log服务</strong>，其它服务将日志信息通过网络发送给Log服务，查询日志可以使用Tag或AppID区分不同服务的日志。</p>
+<p>也有另外一些系统，每个服务在这个Log系统上都申请一个日志采集功能，该Log系统会去宿主服务的指定目录下采集日志。</p>
+<h4 id="从业务层面看在一条数据中应该包含什么内容"><a href="#从业务层面看在一条数据中应该包含什么内容" class="headerlink" title="从业务层面看在一条数据中应该包含什么内容"></a>从业务层面看在一条数据中应该包含什么内容</h4><p>日志记录尽量精炼、详细，反映当时出错的现场参数、产生的环境等信息。</p>
+<h4 id="日志中不要出现敏感信息"><a href="#日志中不要出现敏感信息" class="headerlink" title="日志中不要出现敏感信息"></a>日志中不要出现敏感信息</h4><p>不应该出现敏感的信息，如关键服务的IP地址、端口号、用户的用户名和密码、sessionKey等。</p>
+<h4 id="开发过程总的日志递进缩减策略"><a href="#开发过程总的日志递进缩减策略" class="headerlink" title="开发过程总的日志递进缩减策略"></a>开发过程总的日志递进缩减策略</h4><p>一般开发至上线期间，随着程序bug的减少，逻辑不断完善。除了把日志级别调高，原来需要输出到日志中的一些细粒度信息的日志代码也应该不断减少。这就是开发过程中的日志递进缩减策略。</p>
+<h3 id="错误码系统的设计"><a href="#错误码系统的设计" class="headerlink" title="错误码系统的设计"></a>错误码系统的设计</h3><p>对于服务器系统来说，设计一套好的错误码是非常有必要的，可以在用户请求出问题时迅速定位并解决问题。</p>
+<h4 id="错误码作用"><a href="#错误码作用" class="headerlink" title="错误码作用"></a>错误码作用</h4><ol>
+<li>迅速定位是用户输入的问题还是服务器自身问题。</li>
+<li>快速定位是哪个步骤或服务出了问题。</li>
+</ol>
+<h3 id="监控端口"><a href="#监控端口" class="headerlink" title="监控端口"></a>监控端口</h3><p>实际项目中，出于定位问题和统计数据的要求，往往会给一些正在运行的服务开一些对外的“口子”，技术人员可以给正在运行的服务发送一些指令以得到一些想要的结果。</p>
+<p>发送这些指令既可以是短连接也可长连接，通常不会专门开发一些工具去做这些事，而是利用线程的命令如nc、telnet去做。</p>
+<p>监控命令的实际用途就是在服务运行过程中查询和修改服务内存中的一些信息，其实现原理也很简单，即在某个端口上开启一个监听，然后接收连接，处理连接上来的端口发送的监控命令。</p>
+<p>关于监控端口的注意事项：</p>
+<ul>
+<li>为了服务器的安全性，通常应该将监控端口的IP地址和端口号配置成只允许内网访问，不建议将其暴露在公网上。</li>
+<li>监控端口输出的信息不应该暴露敏感信息，例如用户的密码，如果必须访问用户的敏感信息，就必须通过进一步的指令权限认证。</li>
+<li>监控端口在获取内存中的某些数据时，如果这些数据会被多个线程访问，则应尽快将这些数据复制一份副本出来，以减少锁的粒度，尽量不影响程序中正常运行的线程处理这些数据的效率。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+
+
+
+
+
+
+<div class="license">
+  <div class="license-title">C++服务开发精髓</div>
+  <div class="license-link">
+    <a href="http://songlh424.github.io/2023/06/22/C-%E6%9C%8D%E5%8A%A1%E5%BC%80%E5%8F%91%E7%B2%BE%E9%AB%93/">http://songlh424.github.io/2023/06/22/C-%E6%9C%8D%E5%8A%A1%E5%BC%80%E5%8F%91%E7%B2%BE%E9%AB%93/</a>
+  </div>
+  <div class="license-meta">
+    <div class="license-meta-item">
+      <div class="license-meta-title">本文作者</div>
+      <div class="license-meta-text">
+          Songlh424
+      </div>
+    </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">发布于</div>
+        <div class="license-meta-text">
+          2023-06-22
+        </div>
+      </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">更新于</div>
+        <div class="license-meta-text">
+          2023-07-09
+        </div>
+      </div>
+    <div class="license-meta-item">
+      <div class="license-meta-title">许可协议</div>
+      <div class="license-meta-text">
+          禁止转载引用
+      </div>
+    </div>
+  </div>
+  <div class="license-statement">
+      如需转载或引用本文，请先获得作者授权！
+  </div>
+</div>
+
+
+
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/C-C/" rel="tag"><i class="fa fa-tag"></i> C/C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/16/%E5%BA%8F%E5%88%97%E5%8C%96%E7%9B%B8%E5%85%B3/" rel="prev" title="序列化相关">
+      <i class="fa fa-chevron-left"></i> 序列化相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/10/%E5%86%8D%E8%AF%BBC-Primer/" rel="next" title="再读C++ Primer">
+      再读C++ Primer <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#C-%E5%BF%85%E7%9F%A5%E5%BF%85%E4%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">C++ 必知必会</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RAII%E4%B9%A0%E6%83%AF%E7%94%A8%E6%B3%95"><span class="nav-number">1.1.</span> <span class="nav-text">RAII习惯用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pimpl%E6%83%AF%E7%94%A8%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">pimpl惯用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E7%9A%84%E7%B1%BB%E6%88%90%E5%91%98%E5%88%9D%E5%A7%8B%E5%8C%96%E8%AF%AD%E6%B3%95%E4%B8%8Estd-initializer-list-lt-T-gt"><span class="nav-number">1.3.</span> <span class="nav-text">统一的类成员初始化语法与std::initializer_list&lt;T&gt;</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%E6%A0%87%E7%AD%BE"><span class="nav-number">1.4.</span> <span class="nav-text">注解标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-17%E7%BB%93%E6%9E%84%E5%8C%96%E7%BB%91%E5%AE%9A"><span class="nav-number">1.5.</span> <span class="nav-text">C++17结构化绑定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stl%E5%AE%B9%E5%99%A8%E6%96%B0%E5%A2%9E%E7%9A%84%E5%AE%9E%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">1.6.</span> <span class="nav-text">stl容器新增的实用方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stl%E4%B8%AD%E7%9A%84%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E7%B1%BB%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.7.</span> <span class="nav-text">stl中的智能指针类详解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C-%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91%E5%BF%85%E5%A4%87%E7%9A%84%E5%B7%A5%E5%85%B7%E5%92%8C%E8%B0%83%E8%AF%95%E7%9F%A5%E8%AF%86"><span class="nav-number">2.</span> <span class="nav-text">C++后端开发必备的工具和调试知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#gdb%E8%B0%83%E8%AF%95"><span class="nav-number">2.1.</span> <span class="nav-text">gdb调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gdb%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E8%AF%A6%E8%A7%A3%E2%80%93%E5%88%A9%E7%94%A8gdb%E8%B0%83%E8%AF%95Redis"><span class="nav-number">2.2.</span> <span class="nav-text">gdb常用命令详解–利用gdb调试Redis</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8gdb%E8%B0%83%E8%AF%95%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.3.</span> <span class="nav-text">使用gdb调试多线程程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8gdb%E8%B0%83%E8%AF%95%E5%A4%9A%E8%BF%9B%E7%A8%8B%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.4.</span> <span class="nav-text">使用gdb调试多进程程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gdb%E4%BD%BF%E7%94%A8%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-number">2.5.</span> <span class="nav-text">gdb使用调试技巧</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%BC%96%E7%A8%8B%E4%B8%8E%E8%B5%84%E6%BA%90%E5%90%8C%E6%AD%A5"><span class="nav-number">3.</span> <span class="nav-text">多线程编程与资源同步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="nav-number">3.1.</span> <span class="nav-text">线程的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="nav-number">3.1.1.</span> <span class="nav-text">创建线程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E7%BA%BF%E7%A8%8BID"><span class="nav-number">3.1.2.</span> <span class="nav-text">获取线程ID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E7%BA%BF%E7%A8%8B%E7%BB%93%E6%9D%9F"><span class="nav-number">3.1.3.</span> <span class="nav-text">等待线程结束</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%AF%E7%94%A8%E6%B3%95%EF%BC%9A%E5%B0%86C-%E7%B1%BB%E5%AF%B9%E8%B1%A1%E5%AE%9E%E4%BE%8B%E6%8C%87%E9%92%88%E4%BD%9C%E4%B8%BA%E7%BA%BF%E7%A8%8B%E5%87%BD%E6%95%B0%E7%9A%84%E5%8F%82%E6%95%B0"><span class="nav-number">3.2.</span> <span class="nav-text">惯用法：将C++类对象实例指针作为线程函数的参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E5%9E%8B%E5%8F%98%E9%87%8F%E7%9A%84%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C"><span class="nav-number">3.3.</span> <span class="nav-text">整型变量的原子操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.4.</span> <span class="nav-text">Linux线程同步对象</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E4%BA%92%E6%96%A5%E4%BD%93"><span class="nav-number">3.4.1.</span> <span class="nav-text">Linux互斥体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="nav-number">3.4.2.</span> <span class="nav-text">Linux信号量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F"><span class="nav-number">3.4.3.</span> <span class="nav-text">Linux条件变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E8%AF%BB%E5%86%99%E9%94%81"><span class="nav-number">3.4.4.</span> <span class="nav-text">Linux读写锁</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-11-14-17%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.5.</span> <span class="nav-text">C++11&#x2F;14&#x2F;17线程同步对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%A1%AE%E4%BF%9D%E5%88%9B%E5%BB%BA%E7%9A%84%E7%BA%BF%E7%A8%8B%E4%B8%80%E5%AE%9A%E8%83%BD%E8%BF%90%E8%A1%8C"><span class="nav-number">3.6.</span> <span class="nav-text">如何确保创建的线程一定能运行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BD%BF%E7%94%A8%E9%94%81%E7%BB%8F%E9%AA%8C%E6%80%BB%E7%BB%93"><span class="nav-number">3.7.</span> <span class="nav-text">多线程使用锁经验总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%B1%80%E9%83%A8%E5%AD%98%E5%82%A8"><span class="nav-number">3.8.</span> <span class="nav-text">线程局部存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C%E5%BA%93%E7%9A%84%E9%9D%9E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%87%BD%E6%95%B0"><span class="nav-number">3.9.</span> <span class="nav-text">C库的非线程安全函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%B8%8E%E9%98%9F%E5%88%97%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.10.</span> <span class="nav-text">线程池与队列系统的设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%A4%E7%A8%8B%EF%BC%88Fiber%EF%BC%89%E4%B8%8E%E5%8D%8F%E7%A8%8B%EF%BC%88Routine%EF%BC%89"><span class="nav-number">3.11.</span> <span class="nav-text">纤程（Fiber）与协程（Routine）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B%E9%87%8D%E9%9A%BE%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">网络编程重难点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">TCP网络通信基本流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bind%E5%87%BD%E6%95%B0%E9%87%8D%E9%9A%BE%E7%82%B9%E5%88%86%E6%9E%90"><span class="nav-number">4.2.</span> <span class="nav-text">bind函数重难点分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#socket%E7%9A%84%E9%98%BB%E5%A1%9E%E6%A8%A1%E5%BC%8F%E5%92%8C%E9%9D%9E%E9%98%BB%E5%A1%9E%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.3.</span> <span class="nav-text">socket的阻塞模式和非阻塞模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E9%80%810%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E7%9A%84%E6%95%88%E6%9E%9C"><span class="nav-number">4.4.</span> <span class="nav-text">发送0字节数据的效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#connect%E5%87%BD%E6%95%B0%E5%9C%A8%E9%98%BB%E5%A1%9E%E5%92%8C%E9%9D%9E%E9%98%BB%E5%A1%9E%E6%A8%A1%E5%BC%8F%E4%B8%8B%E8%A1%8C%E4%B8%BA"><span class="nav-number">4.5.</span> <span class="nav-text">connect函数在阻塞和非阻塞模式下行为</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%97%B6%E9%A1%BA%E4%BE%BF%E6%8E%A5%E6%94%B6%E7%AC%AC1%E7%BB%84%E6%95%B0%E6%8D%AE"><span class="nav-number">4.6.</span> <span class="nav-text">连接时顺便接收第1组数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E5%BD%93%E5%89%8Dsocket%E5%AF%B9%E5%BA%94%E7%9A%84%E6%8E%A5%E6%94%B6%E7%BC%93%E5%86%B2%E5%8C%BA%E4%B8%AD%E5%8F%AF%E8%AF%BB%E6%95%B0%E6%8D%AE%E9%87%8F"><span class="nav-number">4.7.</span> <span class="nav-text">获取当前socket对应的接收缓冲区中可读数据量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-SIGPIPE%E4%BF%A1%E5%8F%B7"><span class="nav-number">4.8.</span> <span class="nav-text">Linux SIGPIPE信号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E6%95%88%E7%9A%84readv%E5%92%8Cwritev%E5%87%BD%E6%95%B0"><span class="nav-number">4.9.</span> <span class="nav-text">高效的readv和writev函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E6%9C%BA%E5%AD%97%E8%8A%82%E5%BA%8F%E5%92%8C%E7%BD%91%E7%BB%9C%E5%AD%97%E8%8A%82%E5%BA%8F"><span class="nav-number">4.10.</span> <span class="nav-text">主机字节序和网络字节序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90API"><span class="nav-number">4.11.</span> <span class="nav-text">域名解析API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">5.</span> <span class="nav-text">网络通信故障排查常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ifconfig%E5%91%BD%E4%BB%A4"><span class="nav-number">5.1.</span> <span class="nav-text">ifconfig命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ping%E5%91%BD%E4%BB%A4"><span class="nav-number">5.2.</span> <span class="nav-text">ping命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#telnet%E5%91%BD%E4%BB%A4"><span class="nav-number">5.3.</span> <span class="nav-text">telnet命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#netstat%E5%91%BD%E4%BB%A4"><span class="nav-number">5.4.</span> <span class="nav-text">netstat命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lsof%E5%91%BD%E4%BB%A4"><span class="nav-number">5.5.</span> <span class="nav-text">lsof命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nc%E5%91%BD%E4%BB%A4"><span class="nav-number">5.6.</span> <span class="nav-text">nc命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#curl%E5%91%BD%E4%BB%A4"><span class="nav-number">5.7.</span> <span class="nav-text">curl命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcpdump%E5%91%BD%E4%BB%A4"><span class="nav-number">5.8.</span> <span class="nav-text">tcpdump命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.</span> <span class="nav-text">网络通信协议设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8Estruct%E5%88%B0TLV"><span class="nav-number">6.1.</span> <span class="nav-text">从struct到TLV</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E5%9E%8B%E6%95%B0%E5%80%BC%E5%8E%8B%E7%BC%A9"><span class="nav-number">6.2.</span> <span class="nav-text">整型数值压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE%E6%97%B6%E7%9A%84%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">6.3.</span> <span class="nav-text">设计通信协议时的注意事项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%85%E5%88%86%E7%89%87"><span class="nav-number">6.4.</span> <span class="nav-text">包分片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#XML%E4%B8%8EJSON%E6%A0%BC%E5%BC%8F%E7%9A%84%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.5.</span> <span class="nav-text">XML与JSON格式的协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8D%8F%E8%AE%AE%E7%A4%BA%E4%BE%8B"><span class="nav-number">6.6.</span> <span class="nav-text">一个自定义协议示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%90%86%E8%A7%A3HTTP"><span class="nav-number">6.7.</span> <span class="nav-text">理解HTTP</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP%E6%A0%BC%E5%BC%8F"><span class="nav-number">6.7.1.</span> <span class="nav-text">HTTP格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP-chunk%E7%BC%96%E7%A0%81"><span class="nav-number">6.7.2.</span> <span class="nav-text">HTTP chunk编码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#libcurl"><span class="nav-number">6.7.3.</span> <span class="nav-text">libcurl</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Restful%E6%8E%A5%E5%8F%A3%E4%B8%8EJava-Spring-MVC"><span class="nav-number">6.7.4.</span> <span class="nav-text">Restful接口与Java Spring MVC</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SMTP%E3%80%81POP3%E4%B8%8E%E9%82%AE%E4%BB%B6%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">6.8.</span> <span class="nav-text">SMTP、POP3与邮件客户端</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%82%AE%E4%BB%B6%E5%8D%8F%E8%AE%AE%E7%AE%80%E4%BB%8B"><span class="nav-number">6.8.1.</span> <span class="nav-text">邮件协议简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SMTP"><span class="nav-number">6.8.2.</span> <span class="nav-text">SMTP</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#POP3"><span class="nav-number">6.8.3.</span> <span class="nav-text">POP3</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WebSocket%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.9.</span> <span class="nav-text">WebSocket协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WebSocket%E5%8D%8F%E8%AE%AE%E6%8F%A1%E6%89%8B%E8%BF%87%E7%A8%8B"><span class="nav-number">6.9.1.</span> <span class="nav-text">WebSocket协议握手过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WebSocket%E5%8D%8F%E8%AE%AE%E6%A0%BC%E5%BC%8F"><span class="nav-number">6.9.2.</span> <span class="nav-text">WebSocket协议格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WebSocket%E5%8D%8F%E8%AE%AE%E5%8E%8B%E7%BC%A9%E6%A0%BC%E5%BC%8F"><span class="nav-number">6.9.3.</span> <span class="nav-text">WebSocket协议压缩格式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E4%B8%AA%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="nav-number">7.</span> <span class="nav-text">单个服务的基本结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6%E7%9A%84%E6%95%88%E7%8E%87%E9%97%AE%E9%A2%98"><span class="nav-number">7.1.</span> <span class="nav-text">网络通信组件的效率问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E6%A1%86%E6%9E%B6%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">7.1.1.</span> <span class="nav-text">网络通信框架的设计原则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%94%A4%E9%86%92%E6%9C%BA%E5%88%B6"><span class="nav-number">7.1.2.</span> <span class="nav-text">唤醒机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%B6%E5%8F%91%E6%95%B0%E6%8D%AE%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%81%9A%E6%B3%95"><span class="nav-number">7.2.</span> <span class="nav-text">收发数据的正确做法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%94%B6%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="nav-number">7.2.1.</span> <span class="nav-text">收取数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE"><span class="nav-number">7.2.2.</span> <span class="nav-text">发送数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E8%A6%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%94%A8%E4%B8%80%E4%B8%AAsocket%E6%94%B6%E5%8F%91%E6%95%B0%E6%8D%AE"><span class="nav-number">7.2.3.</span> <span class="nav-text">不要多线程用一个socket收发数据</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E3%80%81%E6%8E%A5%E6%94%B6%E7%BC%93%E5%86%B2%E5%8C%BA%E7%9A%84%E8%AE%BE%E8%AE%A1%E8%A6%81%E7%82%B9"><span class="nav-number">7.3.</span> <span class="nav-text">发送、接收缓冲区的设计要点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">7.3.1.</span> <span class="nav-text">为什么需要缓冲区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">7.3.2.</span> <span class="nav-text">如何设计缓冲区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E5%AF%B9%E7%AB%AF%E4%B8%80%E7%9B%B4%E4%B8%8D%E6%8E%A5%E6%94%B6%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">7.3.3.</span> <span class="nav-text">服务端发送数据对端一直不接收的问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%BA%93%E7%9A%84%E5%88%86%E5%B1%82%E8%AE%BE%E8%AE%A1"><span class="nav-number">7.4.</span> <span class="nav-text">网络库的分层设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%BA%93%E8%AE%BE%E8%AE%A1%E4%B8%AD%E7%9A%84%E5%90%84%E4%B8%AA%E5%B1%82"><span class="nav-number">7.4.1.</span> <span class="nav-text">网络库设计中的各个层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%86Session%E8%BF%9B%E4%B8%80%E6%AD%A5%E5%88%86%E5%B1%82"><span class="nav-number">7.4.2.</span> <span class="nav-text">将Session进一步分层</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E7%AB%AF%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84%E5%AE%9A%E6%97%B6%E5%99%A8%E8%AE%BE%E8%AE%A1"><span class="nav-number">7.5.</span> <span class="nav-text">后端服务中的定时器设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84%E5%AE%9A%E6%97%B6%E5%99%A8"><span class="nav-number">7.5.1.</span> <span class="nav-text">最简单的定时器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%80%9D%E8%B7%AF"><span class="nav-number">7.5.2.</span> <span class="nav-text">定时器设计的基本思路</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E9%80%BB%E8%BE%91%E7%9A%84%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="nav-number">7.5.3.</span> <span class="nav-text">定时器逻辑的性能优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E6%97%B6%E9%97%B4%E7%9A%84%E7%BC%93%E5%AD%98"><span class="nav-number">7.5.4.</span> <span class="nav-text">对时间的缓存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E4%B8%9A%E5%8A%A1%E6%95%B0%E6%8D%AE%E6%98%AF%E5%90%A6%E8%A6%81%E5%8D%95%E5%BC%80%E7%BA%BF%E7%A8%8B"><span class="nav-number">7.6.</span> <span class="nav-text">处理业务数据是否要单开线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E4%BE%B5%E5%85%A5%E5%BC%8F%E7%BB%93%E6%9E%84%E4%B8%8E%E4%BE%B5%E5%85%A5%E5%BC%8F%E7%BB%93%E6%9E%84"><span class="nav-number">7.7.</span> <span class="nav-text">非侵入式结构与侵入式结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%9E%E4%BE%B5%E5%85%A5%E7%BB%93%E6%9E%84"><span class="nav-number">7.7.1.</span> <span class="nav-text">非侵入结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BE%B5%E5%85%A5%E5%BC%8F%E7%BB%93%E6%9E%84"><span class="nav-number">7.7.2.</span> <span class="nav-text">侵入式结构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%A6%E6%9C%89%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9D%97%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E7%BB%8F%E5%85%B8%E7%BB%93%E6%9E%84"><span class="nav-number">7.8.</span> <span class="nav-text">带有网络通信模块的服务器的经典结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BD%95listenfd%E8%AE%BE%E4%B8%BA%E9%9D%9E%E9%98%BB%E5%A1%9E"><span class="nav-number">7.8.1.</span> <span class="nav-text">为何listenfd设为非阻塞</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8Eone-thread-one-loop%E7%BB%93%E6%9E%84%E7%9A%84%E7%BB%8F%E5%85%B8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BB%93%E6%9E%84"><span class="nav-number">7.8.2.</span> <span class="nav-text">基于one thread one loop结构的经典服务器结构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88"><span class="nav-number">7.9.</span> <span class="nav-text">服务器的性能瓶颈</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9D%97%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">8.</span> <span class="nav-text">Redis网络通信模块源码分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.</span> <span class="nav-text">服务器开发中的常用模块设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%AD%E7%BA%BF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9E%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E5%92%8C%E9%80%BB%E8%BE%91%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.1.</span> <span class="nav-text">断线自动重连的应用场景和逻辑设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E6%B4%BB%E6%9C%BA%E5%88%B6%E4%B8%8E%E5%BF%83%E8%B7%B3%E5%8C%85"><span class="nav-number">9.2.</span> <span class="nav-text">保活机制与心跳包</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP-keepalive%E9%80%89%E9%A1%B9"><span class="nav-number">9.2.1.</span> <span class="nav-text">TCP keepalive选项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82%E7%9A%84%E5%BF%83%E8%B7%B3%E5%8C%85%E6%9C%BA%E5%88%B6%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.2.2.</span> <span class="nav-text">应用层的心跳包机制设计</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%89%E4%BB%A3%E7%90%86%E7%9A%84%E5%BF%83%E8%B7%B3%E5%8C%85%E6%9C%BA%E5%88%B6%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.2.3.</span> <span class="nav-text">有代理的心跳包机制设计</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%A6%E4%B8%9A%E5%8A%A1%E6%95%B0%E6%8D%AE%E7%9A%84%E5%BF%83%E8%B7%B3%E5%8C%85"><span class="nav-number">9.2.4.</span> <span class="nav-text">带业务数据的心跳包</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%83%E8%B7%B3%E5%8C%85%E4%B8%8E%E6%B5%81%E9%87%8F"><span class="nav-number">9.2.5.</span> <span class="nav-text">心跳包与流量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%83%E8%B7%B3%E5%8C%85%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="nav-number">9.2.6.</span> <span class="nav-text">心跳包与调试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%83%E8%B7%B3%E5%8C%85%E4%B8%8E%E6%97%A5%E5%BF%97"><span class="nav-number">9.2.7.</span> <span class="nav-text">心跳包与日志</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%A8%A1%E5%9D%97%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.3.</span> <span class="nav-text">日志模块的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%97%A5%E5%BF%97"><span class="nav-number">9.3.1.</span> <span class="nav-text">为什么需要日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%8A%80%E6%9C%AF%E5%AE%9E%E7%8E%B0"><span class="nav-number">9.3.2.</span> <span class="nav-text">日志系统的技术实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8C-C-%E4%B8%AD%E8%BE%93%E5%87%BA%E7%BD%91%E7%BB%9C%E6%95%B0%E6%8D%AE%E5%8C%85%E6%97%A5%E5%BF%97"><span class="nav-number">9.3.3.</span> <span class="nav-text">在C&#x2F;C++中输出网络数据包日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E6%97%B6%E7%9A%84%E6%97%A5%E5%BF%97"><span class="nav-number">9.3.4.</span> <span class="nav-text">调试时的日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%9F%E8%AE%A1%E7%A8%8B%E5%BA%8F%E6%80%A7%E8%83%BD%E6%97%A5%E5%BF%97"><span class="nav-number">9.3.5.</span> <span class="nav-text">统计程序性能日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A0%B9%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%B0%86%E6%97%A5%E5%BF%97%E5%86%99%E5%85%A5%E4%B8%8D%E5%90%8C%E7%9A%84%E6%96%87%E4%BB%B6%E4%B8%AD"><span class="nav-number">9.3.6.</span> <span class="nav-text">根据类型将日志写入不同的文件中</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9B%86%E4%B8%AD%E5%BC%8F%E6%97%A5%E5%BF%97%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E6%97%A5%E5%BF%97%E6%9C%8D%E5%8A%A1"><span class="nav-number">9.3.7.</span> <span class="nav-text">集中式日志服务与分布式日志服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E%E4%B8%9A%E5%8A%A1%E5%B1%82%E9%9D%A2%E7%9C%8B%E5%9C%A8%E4%B8%80%E6%9D%A1%E6%95%B0%E6%8D%AE%E4%B8%AD%E5%BA%94%E8%AF%A5%E5%8C%85%E5%90%AB%E4%BB%80%E4%B9%88%E5%86%85%E5%AE%B9"><span class="nav-number">9.3.8.</span> <span class="nav-text">从业务层面看在一条数据中应该包含什么内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E4%B8%AD%E4%B8%8D%E8%A6%81%E5%87%BA%E7%8E%B0%E6%95%8F%E6%84%9F%E4%BF%A1%E6%81%AF"><span class="nav-number">9.3.9.</span> <span class="nav-text">日志中不要出现敏感信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E5%8F%91%E8%BF%87%E7%A8%8B%E6%80%BB%E7%9A%84%E6%97%A5%E5%BF%97%E9%80%92%E8%BF%9B%E7%BC%A9%E5%87%8F%E7%AD%96%E7%95%A5"><span class="nav-number">9.3.10.</span> <span class="nav-text">开发过程总的日志递进缩减策略</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%A0%81%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">9.4.</span> <span class="nav-text">错误码系统的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%A0%81%E4%BD%9C%E7%94%A8"><span class="nav-number">9.4.1.</span> <span class="nav-text">错误码作用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%91%E6%8E%A7%E7%AB%AF%E5%8F%A3"><span class="nav-number">9.5.</span> <span class="nav-text">监控端口</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Songlh424"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Songlh424</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yourname@gmail.com" title="E-Mail → mailto:yourname@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourname" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Songlh424</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div><div class="footer-menu">
+    <a href="/tags/">文章标签</a> · <a href="/policy/">网站政策</a> · <a href="/links/">友情链接</a>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+
+<script type="text/javascript">
+var linkLists = document.querySelectorAll(".link-list");
+
+linkLists.forEach(function(linkList) {
+  var listPath = linkList.getAttribute('json-src');
+  var iconPath = linkList.getAttribute('icon-src');
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', listPath, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var data = JSON.parse(xhr.responseText);
+      
+      var li = "";
+      linkList.innerHTML = '';
+
+      for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+        var info = data[infoIndex];
+        var labelWarn = info['warn'] ? '<span class="label warn">' + info['warn'] + '</span>' : '';
+        var labelInfo = info['info'] ? '<span class="label info">' + info['info'] + '</span>' : '';
+
+        li += '<div class="link-list-container">';
+        li += '<img class="link-list-image" src="' + iconPath + info['logo'] + '">';
+        li += '<p>' + info['title'] + labelInfo + labelWarn + '</p>';
+        li += '<p>' + info['intro'] + '</p>';
+        li += '<a href="' + info['url'] + '" rel="noopener" target="_blank" data-pjax-state=""></a>';
+        li += '</div>';
+      }
+      
+      linkList.innerHTML = li;
+    }
+  };
+  xhr.send();
+});
+</script>
+
+
+<script type="text/javascript">
+var artList = document.querySelectorAll(".art-list");
+if (artList.length !== 0) {
+  var j = -1;
+  for (var i = 0; i < artList.length; i++) {
+    const listPath = artList[i].getAttribute('json-src');
+    const coverPath = artList[i].getAttribute('cover-src');
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', listPath, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        j++;
+        var data = JSON.parse(xhr.responseText);
+        var li = "";
+        
+        artList[j].innerHTML = '';
+
+        for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+          var info = data[infoIndex];
+          
+          var title = info['title'];
+          if (info['pid']) {
+            title = '<a href="/posts/' + info['pid'] + '/">' + info['title'] + '</a>';
+          }
+
+          var author = info['author'] ? '<span class="author">' + info['author'] + '</span>' : '';
+
+          var intro = info['intro'] ? info['intro'] : '';
+
+          var star = '';
+          if (info['score'] == null) {
+            star = '';
+          } else {
+            var colorStar = '';
+            var greyStar = '';
+            var int = Math.floor(info['score']); //整数部分
+            var fract = 0;
+            if (info['score'] % 1 !== 0) {
+              fract = 1;
+            }
+            for (var m = 0; m < int; m++) {
+              colorStar += '★';
+            }
+            if (fract !== 0) {
+              colorStar += '☆';
+            }
+            for (var m = 0; m < (5 - fract - int); m++) {
+              greyStar += '☆';
+            }
+            if (info['score'] !== 5) {
+              star = '<span class="star-score">' + colorStar + '<span class="grey-star">' + greyStar + '</span></span>';
+            } else {
+              star = '<span class="star-score">' + colorStar + '</span>';
+            }
+          }
+
+          li += '<div class="work">';
+          li += '<div class="work-cover" style="background-image:url(' + coverPath + info['cover'] + ')"></div>';
+          li += '<div class="work-meta">';
+          li += '<div class="work-meta-item title">' + title + '</div>';
+          li += '<div class="work-meta-item">' + author + star + '</div>';
+          li += '<div class="work-meta-item intro">' + intro + '</div>';
+          li += '</div></div>';
+        }
+        
+        artList[j].innerHTML = li;
+      }
+    };
+    xhr.send();
+  }
+}
+</script>
+
+
+
+
+<script src="/resources/minigrid.min.js"></script>
+<script type="text/javascript">
+var album = document.querySelector(".album");
+if (album) {
+  // 相册列表 JSON 数据
+  var imgDataPath = album.getAttribute('json-src');
+  // 照片存储路径
+  var imgPath = album.getAttribute('photo-src');
+  // 最多显示数量
+  var imgMaxNum = 50;
+  // 获取窗口大小以决定图片宽度
+  var windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+  var imageWidth;
+
+  if (windowWidth < 768) {
+    imageWidth = 145; // 移动端图片宽度
+  } else {
+    imageWidth = 235;
+  }
+
+  // 生成相册
+  var linkDataPath = imgDataPath;
+  var photo = {
+    page: 1,
+    offset: imgMaxNum,
+    init: function () {
+      var that = this;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", linkDataPath, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var data = JSON.parse(xhr.responseText);
+          that.render(that.page, data);
+        }
+      };
+      xhr.send();
+    },
+    render: function (page, data) {
+      var begin = (page - 1) * this.offset;
+      var end = page * this.offset;
+      if (begin >= data.length) return;
+      var imgNameWithPattern, imgName, imageSize, imageX, imageY, li = "";
+      for (var i = begin; i < end && i < data.length; i++) {
+        imgNameWithPattern = data[i].split(' ')[1];
+        imgName = imgNameWithPattern.split('.')[0];
+        imageSize = data[i].split(' ')[0];
+        imageX = imageSize.split('.')[0];
+        imageY = imageSize.split('.')[1];
+        li += '<div class="card" style="width:' + imageWidth + 'px" >';
+        li += '<div class="album-photo" style="height:'+ imageWidth * imageY / imageX + 'px">';
+        li += '<a class="fancybox fancybox.image" href="' + imgPath + imgNameWithPattern + '" itemscope="" itemtype="http://schema.org/ImageObject" itemprop="url" data-fancybox="group" rel="group" data-caption="' + imgName + '" title="' +  imgName + '">';
+        li += '<img data-src="' + imgPath + imgNameWithPattern + '" src="' + imgPath + imgNameWithPattern + '" alt="' +  imgName + '" data-loaded="true">';
+        li += '</a>';
+        li += '</div>';
+        li += '</div>';
+      }
+      album.insertAdjacentHTML('beforeend', li);
+      this.minigrid();
+    },
+    minigrid: function () {
+      var grid = new Minigrid({
+        container: '.album',
+        item: '.card',
+        gutter: 12
+      });
+      grid.mount();
+      window.addEventListener('resize', function () {
+        grid.mount();
+      });
+    }
+  };
+  photo.init();
+}
+</script>
+</body>
+</html>

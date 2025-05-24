@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"songlh424.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="进程 进程就是处于执行期的程序，但进程不仅仅局限于一段可执行程序代码。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及多个执行线程，还包括用来存放全局变量的数据段等。 执行线程，简称线程，是在进程中活动的对象。每个线程都拥有一个独立的程序计数器、进程栈和一组进程寄存器。内核调度的对象是线程，而不是进程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程管理">
+<meta property="og:url" content="http://songlh424.github.io/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="blogs">
+<meta property="og:description" content="进程 进程就是处于执行期的程序，但进程不仅仅局限于一段可执行程序代码。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及多个执行线程，还包括用来存放全局变量的数据段等。 执行线程，简称线程，是在进程中活动的对象。每个线程都拥有一个独立的程序计数器、进程栈和一组进程寄存器。内核调度的对象是线程，而不是进程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-18T16:41:16.000Z">
+<meta property="article:modified_time" content="2023-04-03T01:49:24.113Z">
+<meta property="article:author" content="Songlh424">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://songlh424.github.io/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+
+
+
+<link rel="stylesheet" href="/resources/fonts/longcang/LongCang-Regular.css" >
+<link rel="stylesheet" href="/resources/fonts/lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css" >
+
+
+  <title>进程管理 | blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://songlh424.github.io/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Songlh424">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          进程管理
+        </h1>
+
+        <div class="post-meta" style="text-align: left;">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+
+              <time title="创建时间：2022-11-19 00:41:16" itemprop="dateCreated datePublished" datetime="2022-11-19T00:41:16+08:00">2022-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                <time title="修改时间：2023-04-03 09:49:24" itemprop="dateModified" datetime="2023-04-03T09:49:24+08:00">2023-04-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">Linux内核设计与实现</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h3><blockquote>
+<p><strong>进程</strong>就是处于执行期的程序，但进程不仅仅局限于一段可执行程序代码。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及多个执行线程，还包括用来存放全局变量的数据段等。</p>
+<p>执行线程，简称<strong>线程</strong>，是在进程中活动的对象。每个线程都拥有一个独立的程序计数器、进程栈和一组进程寄存器。<strong>内核调度的对象是线程</strong>，而不是进程。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>​    在现代操作系统中，进程提供两种虚拟机制：<strong>虚拟处理器</strong>和<strong>虚拟内存</strong>。虽然实际上可能是许多进程正在分享一个处理器，但虚拟处理器给进程一种假象，让这些进程觉得自己在独享处理器。而虚拟内存让进程在分配和管理内存时觉得自己拥有整个系统的所有内存资源。</p>
+<p>​    <strong>注意：</strong>在线程之间可以共享虚拟内存，但每个都拥有各自的虚拟处理器。</p>
+<h3 id="进程描述符及任务结构"><a href="#进程描述符及任务结构" class="headerlink" title="进程描述符及任务结构"></a>进程描述符及任务结构</h3><p>​    内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中类型为 <code>task_struct</code>, 称为<strong>进程描述符</strong>的结构，该结构定义在<code>&lt;linux/sched.h&gt;</code>文件中。进程描述符中包含一个具体进程的所有信息 。</p>
+<h4 id="分配进程描述符"><a href="#分配进程描述符" class="headerlink" title="分配进程描述符"></a>分配进程描述符</h4><p>​    Linux通过slab分配器分配task_struct结构，这样能达到==对象复用== 和==缓存着色== 的目的。在2.6以前的内核中，各个进程的task_struct存放在它们内核栈的尾端，这样做是为了像x86那样寄存器较少的硬件体系结构只要通过栈指针就能计算出它的位置，而无需额外的寄存器专门记录。现在用 slab 分配器动态生成task_struct，因此只需在栈底（对向下增长的栈）或栈顶（对向上增长的栈）创建一个新的结构<code>struct thread_info</code> 。</p>
+<p>​    在x86上，struct thread_info在文件<code>&lt;asm/thread_info.h&gt;</code>中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">thread_info</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>		*<span class="title">task</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">exec_domain</span>		*<span class="title">exec_domain</span>;</span></span><br><span class="line">    __u32					flag;</span><br><span class="line">    __u32					status;</span><br><span class="line">    __u32					cpu;</span><br><span class="line">    <span class="type">int</span>						preempt_count;</span><br><span class="line">    <span class="type">mm_segment_t</span>			addr_limit;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">restart_block</span>	<span class="title">restart_block</span>;</span></span><br><span class="line">    <span class="type">void</span>					*sysenter_return;</span><br><span class="line">    <span class="type">int</span>						uaccess_err;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="进程描述符的存放"><a href="#进程描述符的存放" class="headerlink" title="进程描述符的存放"></a>进程描述符的存放</h4><blockquote>
+<p>内核通过一个唯一的进程标识值（process identification value）或 PID 来标识每个进程。PID 是一个数，表示为 pid_t 隐含类型，实际上就是一个 int 类型。PID 最大默认设置为32768（short int 短整型的最大值），但这个值可以增加到高达400万，在<code>&lt;linux/threads.h&gt;</code>中定义了PID的最大值。内核把每个进程 PID 存放在它们各自的进程描述符中。</p>
+</blockquote>
+<p>​    在内核中，访问任务通常需要获得指向其 task_struct 的指针，内核中大部分处理进程的代码都是直接通过task_struct进行的。因此，通过<code>current</code>宏来查找到当前正在运行进程的进程描述符的速度就显得尤为重要。有的硬件体系结构可以拿出一个专门寄存器来存放指向当前进程task_struct的指针，用于加快速度。而有些像x86的体系结构寄存器少的就只能在内核栈的尾端创建 thread_info 结构，通过计算偏移量间接地查找 task_struct 结构。</p>
+<h4 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h4><p>​    继承描述符中的 state 域描述了进程的当前状态。系统中每个进程都必然处于五种进程状态中的一种：</p>
+<ul>
+<li>TASK_RUNNING（运行）——进程是可执行的或正在执行，或在运行队列中等待执行。</li>
+<li>TASK_INTERRUPTIBLE（可中断）——进程正在睡眠（也就是说它被阻塞），等待某些条件的达成。一旦这些条件达成，内核就会把进程状态设置为运行。</li>
+<li>TASK_UNINTERRUPTIBLE（不可中断）——这个状态通常在进程必须在等待时不受干扰或等待时间很快就会发生时出现，不会对信号做响应。</li>
+<li>__TASK_TRACED——被其他进程跟踪的进程，例如通过 ptrace 对调试程序进行跟踪。</li>
+<li>__TASK_STOPPED（停止）——进程停止执行；这种状态发生在接收到 SIGSTOP、SIGTTIN、SIGTTOU 等信号的时候。此外，在调试时接收到任何信号都会使进程进入这种状态。</li>
+</ul>
+<h4 id="设置当前进程状态"><a href="#设置当前进程状态" class="headerlink" title="设置当前进程状态"></a>设置当前进程状态</h4><p>​    内核经常需要调整某个进程的状态，这时最好用 ：</p>
+<p><code>set_task_state (task, state);    /* 将任务task的状态设置为state */</code></p>
+<p>该函数将指定的进程设置为指定的状态。必要的时候它会设置内存屏障来强制其他处理器作重新排序。否则，它等价于：</p>
+<p><code>task-&gt;state = state;</code></p>
+<h4 id="进程家族树"><a href="#进程家族树" class="headerlink" title="进程家族树"></a>进程家族树</h4><p>​    在 Linux 系统中，所有的进程都是PID为1的 init 进程的后代。内核在系统启动的最后阶段启动init进程。该进程读取系统的初始化脚本（initscript）并执行其他相关程序，最终完成系统启动的整个过程。</p>
+<p>​    系统中的每个进程必有一个父进程，相应的，每个进程也可以拥有零个或多个子进程。进程间的关系存放在进程描述符中，每个 task_struct 都包含一个指向其父进程 task_struct 的叫做 parent 的指针，还包含一个称为 children 的子进程链表。</p>
+<p>对于当前进程，可以通过下面的代码获得其父进程的进程描述符：</p>
+<p><code>struct task_struct    *my_parent = current-&gt;parent;</code></p>
+<p>同样可以按以下方式依次访问子进程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">task</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">list</span>;</span></span><br><span class="line"></span><br><span class="line">list_for_each(<span class="built_in">list</span>, &amp;current-&gt;children) &#123;</span><br><span class="line">    task = list_entry(<span class="built_in">list</span>, <span class="keyword">struct</span> task_struct, sibling);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只需要通过简单的重复方式就可以遍历系统中的所有进程。这非常容易做到，因为任务队列本来就是一个双向的循环链表。</p>
+<blockquote>
+<p><strong>特别提醒</strong>     在一个拥有大量进程的系统中通过重复来遍历所有的进程代价是很大的。因此，如果没有充足的理由，别这样做。。。</p>
+</blockquote>
+<h3 id="进程创建"><a href="#进程创建" class="headerlink" title="进程创建"></a>进程创建</h3><blockquote>
+<p>Unix进程创建过程：首先在新的地址空间里创建进程，读入可执行文件，最后开始执行。Unix把上述步骤分解到两个单独的函数中去执行：<code>fork()</code>和<code>exec()</code>。首先，fork () 通过拷贝当前进程创建一个子进程。子进程与父进程的区别仅仅在于PID、PPID和某些资源和统计量（例如，挂起的信号）。exec () 函数负责读取可执行文件并将其载入地址空间开始运行。</p>
+</blockquote>
+<h4 id="写时拷贝"><a href="#写时拷贝" class="headerlink" title="写时拷贝"></a>写时拷贝</h4><p>​    传统的 fork() 系统调用直接把所有的资源复制给新创建的进程，这种实现简单但效率低下，因为它拷贝的数据也许并不共享。如果新进程打算立即执行一个新的映像，那么所有的拷贝都将前功尽弃。</p>
+<p>​    Linux的 fork() 使用<strong>写时拷贝</strong>（copy-on-write）页实现，这是一种可以推迟甚至免除拷贝数据的技术。内核此时并不复制整个进程地址空间，而是让父进程和子进程共享同一个拷贝。只有需要写入的时候，数据才会被复制。</p>
+<p>​    fork() 的实际开销就是复制父进程的页表以及给子进程创建唯一的进程描述符。</p>
+<h4 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h4><p>​    Linux通过 clone() 系统调用实现 fork()。这个调用通过一系列的参数标志来指明父、子进程需要共享的资源。fork()、vfork() 和 __clone() 库函数都根据各自需要的参数标志去调用 clone()，然后由 clone() 去调用 do_fork()。</p>
+<p>​    do_fork 完成了创建中的大部分工作，它定义于 kernel/fork.c 文件中。该函数调用 copy_process() 函数，然后让进程开始运行。copy_process() 函数完成的工作很有意思：</p>
+<p>​    1）调用 dup_task_struct() 为新进程创建一个内核栈、thread_info结构和 task_struct，这些值与当前进程的值相同。</p>
+<p>​    2）检查并确保新创建这个子进程后，当前用户所拥有的进程数目没有超出给它分配的资源限制。</p>
+<p>​    3）子进程着手使自己与父进程区别开来。进程描述符内的许多成员都要被清0或设为初始值。</p>
+<p>​    4）子进程的状态被设置为 TASK_UNINTERRUPTIBLE，以保证它不会投入运行。</p>
+<p>​    5）copy_process() 调用 copy_flags() 以更新 task_struct 的flags 成员。</p>
+<p>​    6）调用 alloc_pid() 为新进程分配一个有效的PID。</p>
+<p>​    7）根据传递给 clone() 的参数标志， copy_process() 拷贝或共享打开的文件、文件系统信息、信号处理函数、进程地址空间和命名空间等。</p>
+<p>​    8）最后，copy_process() 做扫尾工作并返回一个指向子进程的指针。</p>
+<p>​    再回到 do_fork() 函数，如果 copy_process() 函数成功返回，新创建的子进程被唤醒并让其投入运行。<strong>内核有意选择子进程首先执行</strong>。因为一般子进程都会调用 exec() 函数，这样可以避免写时拷贝的额外开销。</p>
+<h4 id="vfork"><a href="#vfork" class="headerlink" title="vfork()"></a>vfork()</h4><p>除了不拷贝父进程的页表项外，vfork() 系统调用和 fork() 的功能相同。如果Linux将来 fork() 有了写时拷贝页表项，那么 vfork() 就彻底没用了。</p>
+<h3 id="线程在Linux中的实现"><a href="#线程在Linux中的实现" class="headerlink" title="线程在Linux中的实现"></a>线程在Linux中的实现</h3><blockquote>
+<p>线程机制是现代编程技术中常用的一种抽象概念。该机制提供了在同一程序共享内存地址空间运行的一组线程。这些线程还可以共享打开的文件和其他资源。</p>
+</blockquote>
+<p>​    Linux实现线程的机制非常独特。从内核的角度来说，它并没有线程这个概念。Linux把所有的线程都当作进程来实现。线程仅仅被视为与其他进程共享某些资源的进程。每个线程都拥有唯一的 task_struct。</p>
+<h4 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h4><p>线程创建和普通进程的创建类似，只不过在调用 clone() 的时候需要传递一些参数标志来指明需要共享的资源：</p>
+<p><code>clone (CLONE_VW | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);</code></p>
+<p>对比一下，一个普通的 fork() 的实现是：</p>
+<p><code>clone (SIGCHLD, 0);</code></p>
+<p>而 vfork() 的实现是：</p>
+<p><code>clone (CLONE_VFORK | CLONE_VW | SIGCHLD, 0);</code></p>
+<p>传递给 clone() 的参数标志决定了新创建进程的行为方式和父子进程间共享的资源种类。这些参数标志定义在<code>&lt;linux/sched.h&gt;</code> 。</p>
+<h4 id="内核线程"><a href="#内核线程" class="headerlink" title="内核线程"></a>内核线程</h4><p>​    内核经常需要在后台执行一些操作，这种任务可以通过内核线程（kernel thread）完成——独立运行在内核空间的标准进程。内核线程和普通的进程间的区别在于内核线程没有独立的地址空间。</p>
+<p>​    Linux确实会把一些任务交给内核线程去做，像 flush 和 ksofirqd 这些任务。在Linux上运行<code>$ ps -ef</code>命令就能看到内核线程。这些线程在系统启动时由另外一些内核线程创建，也只能由其他内核线程创建。在<code>&lt;linux/kthread.h&gt;</code>中申明了接口：</p>
+<p><code>struct task_struct *kthread_create(int (*threadfn)(void *data), void *data, const char namefmt[], ...);</code></p>
+<p>​    新的任务由 kthread 内核进程通过调用 clone() 而创建，新的进程将运行 threadfn 函数，给其传递的参数为 data，进程命名为 namefmt。新创建的进程处于不可运行状态，必须调用 wake_up_process() 明确唤醒它。也可以调用 kthread_run() 来创建一个进程并让它运行起来：</p>
+<p><code>struct task_struct *kthread_run(int (*threadfn)(void *data), void *data, const char namefmt[], ...);</code></p>
+<p>内核线程启动后就一直运行直到调用 do_exit() 退出，或者内核其他部分调用 kthread_stop() 退出。</p>
+<h3 id="进程终结"><a href="#进程终结" class="headerlink" title="进程终结"></a>进程终结</h3><p>​    一般来说，进程析构是自身引起的，发生在进程调用 exit() 系统调用时。不管进程是怎么终结的，该任务大部分要靠 do_exit() （定义于 kernel/exit.c）来完成，它做了以下工作：</p>
+<ol>
+<li>将 task_struct 中的标志成员设置为 PF_EXITING。</li>
+<li>调用 del_timer_sync() 删除任一内核定时器，根据返回的结果，确保没有定时器在排队，也没有定时器处理程序在运行</li>
+<li>如果 BSD 的进程记账功能是开启的， do_exit() 调用 acct_update_integrals() 来输出记账信息。</li>
+<li>然后调用 exit_mm() 函数释放进程占用的 mm_struct，如果没有别的进程使用它们，就彻底释放它们。</li>
+<li>接下来调用 sem_exit() 函数。如果进程排队等候IPC信号，它则离开队列。</li>
+<li>调用 exit_files() 和 exit_fs() ，以分别递减文件描述符、文件系统数据的引用计数。如果某个引用计数降为零就可以释放。</li>
+<li>接着把存放在 task_struct 的 exit_code 成员中的任务推出代码置为由 exit() 提供的退出代码。</li>
+<li>调用 exit_notify() 向父进程发送信号，给子进程重新找养父，并把进程状态设为 EXIT_ZOMBIE。</li>
+<li>do_exit() 调用 schedule() 切换到新的进程。因为处于 EXIT_ZOMBIE 状态的进程不会被调度。这是最后一步，do_exit() 永不返回。</li>
+</ol>
+<p>​     至此，与进程相关联的所有资源都被释放掉了，此时进程占用的所有内存就是内核栈、thread_info结构和task_struct结构。此时进程存在的唯一目的就是向它的父进程提供信息。父进程检索到信息后，或通知内核那是无关信息后，由进程所持有的剩余内存被释放，归还给系统使用。</p>
+<h4 id="删除进程描述符"><a href="#删除进程描述符" class="headerlink" title="删除进程描述符"></a>删除进程描述符</h4><p>​    在调用了 do_exit() 之后，尽管线程已经僵死不能再运行了，但是系统还保留了它的进程描述符。因此，进程所需的清理工作和进程描述符的删除被分开执行。</p>
+<p>​    wait() 这一族函数都已通过唯一且复杂的系统调用 wait4() 来实现的。它的标准动作是挂起调用它的进程，直到其中一个子进程退出，此时函数会返回子进程的PID。调用该函数时提供的函数指针会包含子函数退出时的退出代码。</p>
+<p>​    当最终需要释放进程描述符时，release_task() 会被调用，完成以下工作：</p>
+<ol>
+<li>它调用 __exit_signal()，该函数调用 _unhash_process()，后者又调用 detack_pid() 从pidhash 上删除该进程，同时也从任务列表中删除该进程。</li>
+<li>_exit_signal() 释放目前僵死进程所使用的所有剩余资源，并进行最终统计和记录。</li>
+<li>如果这个进程是线程组最后一个进程，并且领头进程已经死掉，那么 release_task() 就要通知僵死的领头进程的父进程。</li>
+<li>release_task() 调用 put_task_struct() 释放进程内核栈和 thread_info 结构所占的页，并释放 task_struct 所占的 slab 高速缓存。</li>
+</ol>
+<p>至此，进程描述符和所有进程独享资源就全部释放掉了。</p>
+<h4 id="孤儿进程造成的进退维谷"><a href="#孤儿进程造成的进退维谷" class="headerlink" title="孤儿进程造成的进退维谷"></a>孤儿进程造成的进退维谷</h4><blockquote>
+<p>如果父进程在子进程之前退出，必须有机制来保证子进程能找到一个新的父亲，否则这些称为孤儿的进程就会在退出时处于僵死状态，白白地消耗内存。</p>
+</blockquote>
+<p>​    解决的办法就是给子进程在当前线程组内找一个线程作为父亲，如果不行，就让 init 做它们的父进程。在 do_exit() 会调用 exit_notify() ，该函数会调用 forget_original_parent() ，而后者会调用 find_new_reaper() 来执行寻父过程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">struct</span> task_struct *<span class="title function_">find_new_reaper</span><span class="params">(<span class="keyword">struct</span> task_struct *father)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pid_namespace</span> *<span class="title">pid_ns</span> =</span> task_active_pid_ns(father);<span class="comment">//获取任务中包含进程的命名空间信息</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">thread</span>;</span></span><br><span class="line">    </span><br><span class="line">    thread = father;</span><br><span class="line">    while_each_thread(father, thread) &#123;		<span class="comment">//宏遍历所有进程信息</span></span><br><span class="line">        <span class="keyword">if</span> (thread-&gt;flags &amp; PF_EXITING)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        <span class="keyword">if</span> (unlikely(pid_ns-&gt;child_reaper == father))<span class="comment">//指向该进程的task_struct的指针</span></span><br><span class="line">            pid_ns-&gt;child_reaper = thread;</span><br><span class="line">        <span class="keyword">return</span> thread;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(unlikely(pid_ns-&gt;child_reaper == father)) &#123;</span><br><span class="line">        write_unlock_irq(&amp;tasklist_lock);<span class="comment">//解写锁，并且开中断</span></span><br><span class="line">        <span class="keyword">if</span> (unlikely(pid_ns == &amp;init_pid_ns))</span><br><span class="line">            panic(<span class="string">&quot;Attempted to kill init!&quot;</span>);</span><br><span class="line">        zap_pid_ns_processes(pid_ns);</span><br><span class="line">        write_lock_irq(&amp;tasklist_lock);<span class="comment">//加写锁，并且关中断</span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * We can not clear -&gt;child_reaper or leave it alone.</span></span><br><span class="line"><span class="comment">        * There may by stealth EXIT_DEAD tasks on -&gt;children,</span></span><br><span class="line"><span class="comment">        * forget_original_parent() must move them somewhere.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        pid_ns-&gt;child_reaper = init_pid_ns.child_reaper;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pid_ns-&gt;child_reaper;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    这段代码试图找到进程所在的线程组内其他进程。如果线程组内没有其他进程，就找到并返回的是 init 进程。找到之后，只需遍历所有子进程并为它们设置新的父进程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">reaper = find_new_reaper(father);</span><br><span class="line">list_for_each_entry_safe(p, n, &amp;father-&gt;children, sibling) &#123;</span><br><span class="line">    p-&gt;real_parent = reaper;</span><br><span class="line">    <span class="keyword">if</span> (p-&gt;parent == father) &#123;</span><br><span class="line">        BUG_ON(p-&gt;ptrace);</span><br><span class="line">        p-&gt;parent = p-&gt;real_parent;</span><br><span class="line">    &#125;</span><br><span class="line">    reparent_thread(p, father);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    然后调用 ptrace_exit_finish() 同样进行新的寻父过程，不过这次是给 ptraced 的子进程寻找父亲：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">exit_ptrace</span><span class="params">(<span class="keyword">struct</span> task_struct *tracer)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>, *<span class="title">n</span>;</span></span><br><span class="line">    LIST_HEAD(ptrace_dead);</span><br><span class="line">    write_lock_irq(&amp;tasklist_lock);</span><br><span class="line">    list_for_each_entry_safe(p, n, &amp;tracer-&gt;ptraced, ptrace_entry) &#123;</span><br><span class="line">        <span class="keyword">if</span> (__ptrace_detach(tracer, p))</span><br><span class="line">            list_add(&amp;p-&gt;ptrace_entry, &amp;ptrace_dead);</span><br><span class="line">    &#125;</span><br><span class="line">    write_unlock_irq(&amp;tasklist_lock);</span><br><span class="line">    BUG_ON(!list_empty(&amp;tracer-&gt;ptraced));</span><br><span class="line">    list_for_each_entry_safe(p, n, &amp;ptrace_dead, ptrace_entry) &#123;</span><br><span class="line">        list_del_init(&amp;p-&gt;ptrace_entry);</span><br><span class="line">        release_task(p);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    这段代码遍历了两个链表：子进程链表和 ptrace 子进程链表，给每个子进程设置新的父进程。这两个链表同时存在是内核的一个新特性。当一个进程被跟踪时，它的临时父亲设定为调式进程。此时如果它的父进程退出了，系统会为它和它的所有兄弟重新找一个父进程。</p>
+<p>​    在以前的内核中，这需要遍历系统所有的进程来找这些子进程。现在的解决方法是在一个单独的被ptrace跟踪的子进程链表中搜索相关的兄弟进程——用两个相对较小的链表减轻遍历的消耗。</p>
+<p>​    一旦系统为进程成功地找到和设置了新的父进程，就不会出现僵死进程遗留危险。init 进程会例行调用 wait() 来检查其子进程，清除所有与其相关的僵死进程。</p>
+
+    </div>
+
+    
+    
+    
+
+
+
+
+
+
+
+<div class="license">
+  <div class="license-title">进程管理</div>
+  <div class="license-link">
+    <a href="http://songlh424.github.io/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">http://songlh424.github.io/2022/11/19/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/</a>
+  </div>
+  <div class="license-meta">
+    <div class="license-meta-item">
+      <div class="license-meta-title">本文作者</div>
+      <div class="license-meta-text">
+          Songlh424
+      </div>
+    </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">发布于</div>
+        <div class="license-meta-text">
+          2022-11-19
+        </div>
+      </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">更新于</div>
+        <div class="license-meta-text">
+          2023-04-03
+        </div>
+      </div>
+    <div class="license-meta-item">
+      <div class="license-meta-title">许可协议</div>
+      <div class="license-meta-text">
+          禁止转载引用
+      </div>
+    </div>
+  </div>
+  <div class="license-statement">
+      如需转载或引用本文，请先获得作者授权！
+  </div>
+</div>
+
+
+
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/" rel="prev" title="从内核出发">
+      <i class="fa fa-chevron-left"></i> 从内核出发
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/20/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/" rel="next" title="进程调度">
+      进程调度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6%E5%8F%8A%E4%BB%BB%E5%8A%A1%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">进程描述符及任务结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.1.</span> <span class="nav-text">分配进程描述符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6%E7%9A%84%E5%AD%98%E6%94%BE"><span class="nav-number">2.2.</span> <span class="nav-text">进程描述符的存放</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="nav-number">2.3.</span> <span class="nav-text">进程状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%BD%93%E5%89%8D%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="nav-number">2.4.</span> <span class="nav-text">设置当前进程状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%AE%B6%E6%97%8F%E6%A0%91"><span class="nav-number">2.5.</span> <span class="nav-text">进程家族树</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA"><span class="nav-number">3.</span> <span class="nav-text">进程创建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E6%97%B6%E6%8B%B7%E8%B4%9D"><span class="nav-number">3.1.</span> <span class="nav-text">写时拷贝</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#fork"><span class="nav-number">3.2.</span> <span class="nav-text">fork()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vfork"><span class="nav-number">3.3.</span> <span class="nav-text">vfork()</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%9C%A8Linux%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">线程在Linux中的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">创建线程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">内核线程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%BB%88%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">进程终结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E8%BF%9B%E7%A8%8B%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">5.1.</span> <span class="nav-text">删除进程描述符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%A4%E5%84%BF%E8%BF%9B%E7%A8%8B%E9%80%A0%E6%88%90%E7%9A%84%E8%BF%9B%E9%80%80%E7%BB%B4%E8%B0%B7"><span class="nav-number">5.2.</span> <span class="nav-text">孤儿进程造成的进退维谷</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Songlh424"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Songlh424</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yourname@gmail.com" title="E-Mail → mailto:yourname@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourname" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Songlh424</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div><div class="footer-menu">
+    <a href="/tags/">文章标签</a> · <a href="/policy/">网站政策</a> · <a href="/links/">友情链接</a>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+
+<script type="text/javascript">
+var linkLists = document.querySelectorAll(".link-list");
+
+linkLists.forEach(function(linkList) {
+  var listPath = linkList.getAttribute('json-src');
+  var iconPath = linkList.getAttribute('icon-src');
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', listPath, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var data = JSON.parse(xhr.responseText);
+      
+      var li = "";
+      linkList.innerHTML = '';
+
+      for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+        var info = data[infoIndex];
+        var labelWarn = info['warn'] ? '<span class="label warn">' + info['warn'] + '</span>' : '';
+        var labelInfo = info['info'] ? '<span class="label info">' + info['info'] + '</span>' : '';
+
+        li += '<div class="link-list-container">';
+        li += '<img class="link-list-image" src="' + iconPath + info['logo'] + '">';
+        li += '<p>' + info['title'] + labelInfo + labelWarn + '</p>';
+        li += '<p>' + info['intro'] + '</p>';
+        li += '<a href="' + info['url'] + '" rel="noopener" target="_blank" data-pjax-state=""></a>';
+        li += '</div>';
+      }
+      
+      linkList.innerHTML = li;
+    }
+  };
+  xhr.send();
+});
+</script>
+
+
+<script type="text/javascript">
+var artList = document.querySelectorAll(".art-list");
+if (artList.length !== 0) {
+  var j = -1;
+  for (var i = 0; i < artList.length; i++) {
+    const listPath = artList[i].getAttribute('json-src');
+    const coverPath = artList[i].getAttribute('cover-src');
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', listPath, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        j++;
+        var data = JSON.parse(xhr.responseText);
+        var li = "";
+        
+        artList[j].innerHTML = '';
+
+        for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+          var info = data[infoIndex];
+          
+          var title = info['title'];
+          if (info['pid']) {
+            title = '<a href="/posts/' + info['pid'] + '/">' + info['title'] + '</a>';
+          }
+
+          var author = info['author'] ? '<span class="author">' + info['author'] + '</span>' : '';
+
+          var intro = info['intro'] ? info['intro'] : '';
+
+          var star = '';
+          if (info['score'] == null) {
+            star = '';
+          } else {
+            var colorStar = '';
+            var greyStar = '';
+            var int = Math.floor(info['score']); //整数部分
+            var fract = 0;
+            if (info['score'] % 1 !== 0) {
+              fract = 1;
+            }
+            for (var m = 0; m < int; m++) {
+              colorStar += '★';
+            }
+            if (fract !== 0) {
+              colorStar += '☆';
+            }
+            for (var m = 0; m < (5 - fract - int); m++) {
+              greyStar += '☆';
+            }
+            if (info['score'] !== 5) {
+              star = '<span class="star-score">' + colorStar + '<span class="grey-star">' + greyStar + '</span></span>';
+            } else {
+              star = '<span class="star-score">' + colorStar + '</span>';
+            }
+          }
+
+          li += '<div class="work">';
+          li += '<div class="work-cover" style="background-image:url(' + coverPath + info['cover'] + ')"></div>';
+          li += '<div class="work-meta">';
+          li += '<div class="work-meta-item title">' + title + '</div>';
+          li += '<div class="work-meta-item">' + author + star + '</div>';
+          li += '<div class="work-meta-item intro">' + intro + '</div>';
+          li += '</div></div>';
+        }
+        
+        artList[j].innerHTML = li;
+      }
+    };
+    xhr.send();
+  }
+}
+</script>
+
+
+
+
+<script src="/resources/minigrid.min.js"></script>
+<script type="text/javascript">
+var album = document.querySelector(".album");
+if (album) {
+  // 相册列表 JSON 数据
+  var imgDataPath = album.getAttribute('json-src');
+  // 照片存储路径
+  var imgPath = album.getAttribute('photo-src');
+  // 最多显示数量
+  var imgMaxNum = 50;
+  // 获取窗口大小以决定图片宽度
+  var windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+  var imageWidth;
+
+  if (windowWidth < 768) {
+    imageWidth = 145; // 移动端图片宽度
+  } else {
+    imageWidth = 235;
+  }
+
+  // 生成相册
+  var linkDataPath = imgDataPath;
+  var photo = {
+    page: 1,
+    offset: imgMaxNum,
+    init: function () {
+      var that = this;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", linkDataPath, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var data = JSON.parse(xhr.responseText);
+          that.render(that.page, data);
+        }
+      };
+      xhr.send();
+    },
+    render: function (page, data) {
+      var begin = (page - 1) * this.offset;
+      var end = page * this.offset;
+      if (begin >= data.length) return;
+      var imgNameWithPattern, imgName, imageSize, imageX, imageY, li = "";
+      for (var i = begin; i < end && i < data.length; i++) {
+        imgNameWithPattern = data[i].split(' ')[1];
+        imgName = imgNameWithPattern.split('.')[0];
+        imageSize = data[i].split(' ')[0];
+        imageX = imageSize.split('.')[0];
+        imageY = imageSize.split('.')[1];
+        li += '<div class="card" style="width:' + imageWidth + 'px" >';
+        li += '<div class="album-photo" style="height:'+ imageWidth * imageY / imageX + 'px">';
+        li += '<a class="fancybox fancybox.image" href="' + imgPath + imgNameWithPattern + '" itemscope="" itemtype="http://schema.org/ImageObject" itemprop="url" data-fancybox="group" rel="group" data-caption="' + imgName + '" title="' +  imgName + '">';
+        li += '<img data-src="' + imgPath + imgNameWithPattern + '" src="' + imgPath + imgNameWithPattern + '" alt="' +  imgName + '" data-loaded="true">';
+        li += '</a>';
+        li += '</div>';
+        li += '</div>';
+      }
+      album.insertAdjacentHTML('beforeend', li);
+      this.minigrid();
+    },
+    minigrid: function () {
+      var grid = new Minigrid({
+        container: '.album',
+        item: '.card',
+        gutter: 12
+      });
+      grid.mount();
+      window.addEventListener('resize', function () {
+        grid.mount();
+      });
+    }
+  };
+  photo.init();
+}
+</script>
+</body>
+</html>

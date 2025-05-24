@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"songlh424.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="简易模板">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cmake简单使用">
+<meta property="og:url" content="http://songlh424.github.io/2023/05/15/Cmake%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="blogs">
+<meta property="og:description" content="简易模板">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-15T03:02:00.000Z">
+<meta property="article:modified_time" content="2023-08-24T12:12:40.199Z">
+<meta property="article:author" content="Songlh424">
+<meta property="article:tag" content="随笔">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://songlh424.github.io/2023/05/15/Cmake%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+
+
+
+<link rel="stylesheet" href="/resources/fonts/longcang/LongCang-Regular.css" >
+<link rel="stylesheet" href="/resources/fonts/lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css" >
+
+
+  <title>Cmake简单使用 | blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://songlh424.github.io/2023/05/15/Cmake%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Songlh424">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Cmake简单使用
+        </h1>
+
+        <div class="post-meta" style="text-align: left;">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+
+              <time title="创建时间：2023-05-15 11:02:00" itemprop="dateCreated datePublished" datetime="2023-05-15T11:02:00+08:00">2023-05-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                <time title="修改时间：2023-08-24 20:12:40" itemprop="dateModified" datetime="2023-08-24T20:12:40+08:00">2023-08-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="简易模板"><a href="#简易模板" class="headerlink" title="简易模板"></a>简易模板</h3><span id="more"></span>
+
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">2.8</span>)</span><br><span class="line"><span class="keyword">project</span>(cpp_reflect)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设定编译参数</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD <span class="number">11</span>)		<span class="comment"># 设定语言标准</span></span><br><span class="line"><span class="keyword">set</span>(CXX_EXTENSIONS <span class="keyword">OFF</span>)			<span class="comment"># 是否使用编译器扩展</span></span><br><span class="line"><span class="keyword">set</span>(CXX_STANDARD_REQUIRED <span class="keyword">ON</span>)	<span class="comment"># 是否必须符合语言标准</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_BUILD_TYPE <span class="string">&quot;Debug&quot;</span>)</span><br><span class="line"><span class="keyword">set</span>(CMAKE_C_FLAGS <span class="string">&quot;-O1&quot;</span>)    <span class="comment">#设置c工程编译选项</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_CXX_FLAGS <span class="string">&quot;-O0 -Werror&quot;</span>)  <span class="comment">#设置C++工程编译选项</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">message</span>(<span class="string">&quot;C++ compiler flags: $&#123;CMAKE_CXX_FLAGS&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设定头文件路径</span></span><br><span class="line"><span class="keyword">include_directories</span>(.)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设定链接库的路径（一般使用第三方非系统目录下的库）</span></span><br><span class="line"><span class="comment"># link_directories(../build/)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># set(SOURCE_FILES ./main.cpp)</span></span><br><span class="line"><span class="keyword">aux_source_directory</span>(. SRCS) <span class="comment">#最顶级目录下所有的.cpp文件放入到DIR变量中</span></span><br><span class="line"><span class="keyword">aux_source_directory</span>(./reflect SRCS)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 生成动/静态库</span></span><br><span class="line"><span class="comment"># add_library(动/静态链接库名称 SHARED/STATIC 源码列表)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 生成可执行文件</span></span><br><span class="line"><span class="keyword">add_executable</span>(main <span class="variable">$&#123;SRCS&#125;</span>)</span><br><span class="line"><span class="comment"># add_dependencies(mian pthread) #添加依赖关系，确保被依赖的先编译</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置语言标准，不同于前面在全局设置，这里通过对不同目标进行设置</span></span><br><span class="line"><span class="comment"># set_target_properties(main</span></span><br><span class="line"><span class="comment">#     PROPERTIES</span></span><br><span class="line"><span class="comment">#         CXX_STANDARD 14               # 设置我们想要的语言标准</span></span><br><span class="line"><span class="comment">#         CXX_EXTENSIONS OFF            # 是否不用编译器扩展，只用ISO C++标准的编译器标志</span></span><br><span class="line"><span class="comment">#         CXX_STANDARD_REQUIRED ON      # 指定所选标准的版本，如果这个版本不可用，CMake将停止配置并出现错误</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 链接库，就是g++编译选项-l后的内容，不要有多余空格</span></span><br><span class="line"><span class="comment"># target_link_libraries(main pthread)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置编译选项，不通过与设置CMAKE_CXX_FLAGS，这个可以为每个不同的目标设置不同的编译选项</span></span><br><span class="line"><span class="comment"># target_compile_options(main PRIVATE $&#123;flags&#125;)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置生成的可执行文件的输出路径</span></span><br><span class="line"><span class="keyword">set</span>(EXECUTABLE_OUTPUT_PATH <span class="variable">$&#123;PROJECT_SOURCE_DIR&#125;</span>/bin)</span><br></pre></td></tr></table></figure>
+
+<!--mroe-->
+
+<h3 id="Cmake内置的变量"><a href="#Cmake内置的变量" class="headerlink" title="Cmake内置的变量"></a>Cmake内置的变量</h3><ul>
+<li><code>CMAKE_BUILD_TYPE</code>：该变量默认为空，识别的值为：<ol>
+<li>Debug：用于在没有优化的情况下，使用带有调试符号构建库或可执行文件</li>
+<li>Release：用于构建优化的库或可执行文件，不包含调试符号</li>
+<li>RelWithDebInfo：用于构建较少优化的库或可执行文件，包括调试符号。</li>
+<li>MinSizeRel：用于不增加目标代码大小的优化方式，来构建库或可执行文件</li>
+</ol>
+</li>
+<li><code>CMAKE_INSTALL_PREFIX</code>：安装目录，Windows默认<code>C:\Program Files</code>，Unix上默认<code>/usr/local</code>。</li>
+</ul>
+<h3 id="gcc-g-常用编译选项"><a href="#gcc-g-常用编译选项" class="headerlink" title="gcc/g++常用编译选项"></a>gcc/g++常用编译选项</h3><ul>
+<li><code>-c</code>：只激活预处理、编译和汇编，也就是生成.o文件</li>
+<li><code>-S</code>：只激活预处理和编译，也就是生成汇编代码.s文件</li>
+<li><code>-E</code>：只激活预处理不生成文件，需要把它重定向到一个输出文件里</li>
+<li><code>-o</code>：指定生成的结果文件名</li>
+</ul>
+<ul>
+<li><code>-C</code>：在预处理时不删除注释信息，和-E一起使用，有时分析程序很方便</li>
+<li><code>-M</code>：生成文件关联的信息。包含目标文件所依赖的所有源代码可以用<code>gcc -M hello.c</code>测试</li>
+<li><code>-llibray</code>：指定编译时使用的库。<code>gcc -lcurse hello.c</code>.</li>
+<li><code>Ldir</code>：指定编译时搜索库的路径。一般用来指定第三方库路径，否则编译器只会在标准库目录寻找。<code>gcc                 -lcurse -L. hello.c</code>.</li>
+<li><code>-O0 -O1 -O2 -O3</code>：编译器优化选项的4个级别，-O0表示没有优化，-O1为默认值，-O3优化级别最高</li>
+</ul>
+<blockquote>
+<p>O1优化会消耗稍多的编译时间，主要对代码的分支，常量以及表达式等进行优化</p>
+<p>O2会尝试更多的寄存器级的优化以及指令级的优化，会在编译期间占用更多的内存和编译时间</p>
+<p>O3在O2的基础上进行更多的优化，例如使用伪寄存器网络，普通函数内联，以及针对循环的更多优化</p>
+<p>优化带来的问题：任何级别的优化都将带来代码结构的改变，例如分支的合并和消除，对共用子表达式的消除，对循环内load/store操作的替换和更改，都将会使目标代码的执行顺序变得面目全非，<strong>导致调式信息严重不足</strong>。其次，在O2优化后，编译器会<strong>影响内存操作的执行顺序</strong>，例如-fforce-mem有可能导致内存与寄存器之间的数据产生类似脏数据的不一致。对于某些依赖内存操作顺序而进行的逻辑，需要做严格的处理后才能进行优化，例如采用volatile关键字限制变量的操作方式，或者利用barrier迫使cpu严格按照指令序执行。</p>
+</blockquote>
+<ul>
+<li><code>-fpic</code>：编译器生成位置无关目标码，适用于共享库</li>
+<li><code>-fPIC</code>：编译器生成位置无关目标码，适用于动态链接</li>
+<li><code>-g</code>：编译时产生调试信息，需要调试代码必须带上</li>
+<li><code>-ggdb</code>：生成gdb专用的调试信息，使用最合适的格式会有一些gdb专用的扩展，可能在其它调试器上无法运行。</li>
+<li><code>-rdynamic</code>：是一个链接选项，指示连接器把所有符号都添加到动态符号表里</li>
+<li><code>-static</code>：使用静态库，禁止使用动态库</li>
+<li><code>-share</code>：尽量使用动态库</li>
+<li><code>-w</code>：不生成任何警告信息</li>
+</ul>
+<h4 id="警告选项"><a href="#警告选项" class="headerlink" title="警告选项"></a>警告选项</h4><ul>
+<li><p><code>-Wall</code>：生成所有警告信息</p>
+</li>
+<li><p><code>-Werror</code>：把警告当作错误</p>
+</li>
+<li><p><code>-Winline</code>：声明了inline和指定-finline-function选项，如果无法内联发出警告</p>
+</li>
+<li><p><code>-Wunreachable-code</code>：如果编译器探测到永远不会执行到的代码就给出警告</p>
+</li>
+<li><p><code>-Wconversion</code>：当隐式类型转换可能改变值时给出警告</p>
+</li>
+<li><p><code>-Wdeprecated</code>：使用已过时C++属性和用法给出警告</p>
+</li>
+<li><p><code>-Wunnused-function</code>：有未使用的函数时发出警告</p>
+</li>
+</ul>
+<blockquote>
+<p>对于一些发出警告的选项，比如<code>-Wdeprected</code>，这些信息一般都被包含在<code>-Wall</code>选项中，如果我们不想生成这些选项的警告信息，只需要加上no和-符号分隔，比如<code>-Wno-deprected</code>。也就是说一般我们很少用到需要指定生成某个具体的警告信息，因为-Wall会包含绝大部分，但是我们可以选择不生成某些具体信息。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+
+
+
+
+
+
+<div class="license">
+  <div class="license-title">Cmake简单使用</div>
+  <div class="license-link">
+    <a href="http://songlh424.github.io/2023/05/15/Cmake%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">http://songlh424.github.io/2023/05/15/Cmake%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/</a>
+  </div>
+  <div class="license-meta">
+    <div class="license-meta-item">
+      <div class="license-meta-title">本文作者</div>
+      <div class="license-meta-text">
+          Songlh424
+      </div>
+    </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">发布于</div>
+        <div class="license-meta-text">
+          2023-05-15
+        </div>
+      </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">更新于</div>
+        <div class="license-meta-text">
+          2023-08-24
+        </div>
+      </div>
+    <div class="license-meta-item">
+      <div class="license-meta-title">许可协议</div>
+      <div class="license-meta-text">
+          禁止转载引用
+      </div>
+    </div>
+  </div>
+  <div class="license-statement">
+      如需转载或引用本文，请先获得作者授权！
+  </div>
+</div>
+
+
+
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E9%9A%8F%E7%AC%94/" rel="tag"><i class="fa fa-tag"></i> 随笔</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/04/16/time%E7%9B%B8%E5%85%B3%E7%9A%84C%E5%87%BD%E6%95%B0/" rel="prev" title="C和POSIX提供的Date/Time函数">
+      <i class="fa fa-chevron-left"></i> C和POSIX提供的Date/Time函数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/26/%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/" rel="next" title="内存泄漏">
+      内存泄漏 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%80%E6%98%93%E6%A8%A1%E6%9D%BF"><span class="nav-number">1.</span> <span class="nav-text">简易模板</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cmake%E5%86%85%E7%BD%AE%E7%9A%84%E5%8F%98%E9%87%8F"><span class="nav-number">2.</span> <span class="nav-text">Cmake内置的变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gcc-g-%E5%B8%B8%E7%94%A8%E7%BC%96%E8%AF%91%E9%80%89%E9%A1%B9"><span class="nav-number">3.</span> <span class="nav-text">gcc&#x2F;g++常用编译选项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AD%A6%E5%91%8A%E9%80%89%E9%A1%B9"><span class="nav-number">3.1.</span> <span class="nav-text">警告选项</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Songlh424"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Songlh424</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yourname@gmail.com" title="E-Mail → mailto:yourname@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourname" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Songlh424</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div><div class="footer-menu">
+    <a href="/tags/">文章标签</a> · <a href="/policy/">网站政策</a> · <a href="/links/">友情链接</a>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+
+<script type="text/javascript">
+var linkLists = document.querySelectorAll(".link-list");
+
+linkLists.forEach(function(linkList) {
+  var listPath = linkList.getAttribute('json-src');
+  var iconPath = linkList.getAttribute('icon-src');
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', listPath, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var data = JSON.parse(xhr.responseText);
+      
+      var li = "";
+      linkList.innerHTML = '';
+
+      for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+        var info = data[infoIndex];
+        var labelWarn = info['warn'] ? '<span class="label warn">' + info['warn'] + '</span>' : '';
+        var labelInfo = info['info'] ? '<span class="label info">' + info['info'] + '</span>' : '';
+
+        li += '<div class="link-list-container">';
+        li += '<img class="link-list-image" src="' + iconPath + info['logo'] + '">';
+        li += '<p>' + info['title'] + labelInfo + labelWarn + '</p>';
+        li += '<p>' + info['intro'] + '</p>';
+        li += '<a href="' + info['url'] + '" rel="noopener" target="_blank" data-pjax-state=""></a>';
+        li += '</div>';
+      }
+      
+      linkList.innerHTML = li;
+    }
+  };
+  xhr.send();
+});
+</script>
+
+
+<script type="text/javascript">
+var artList = document.querySelectorAll(".art-list");
+if (artList.length !== 0) {
+  var j = -1;
+  for (var i = 0; i < artList.length; i++) {
+    const listPath = artList[i].getAttribute('json-src');
+    const coverPath = artList[i].getAttribute('cover-src');
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', listPath, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        j++;
+        var data = JSON.parse(xhr.responseText);
+        var li = "";
+        
+        artList[j].innerHTML = '';
+
+        for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+          var info = data[infoIndex];
+          
+          var title = info['title'];
+          if (info['pid']) {
+            title = '<a href="/posts/' + info['pid'] + '/">' + info['title'] + '</a>';
+          }
+
+          var author = info['author'] ? '<span class="author">' + info['author'] + '</span>' : '';
+
+          var intro = info['intro'] ? info['intro'] : '';
+
+          var star = '';
+          if (info['score'] == null) {
+            star = '';
+          } else {
+            var colorStar = '';
+            var greyStar = '';
+            var int = Math.floor(info['score']); //整数部分
+            var fract = 0;
+            if (info['score'] % 1 !== 0) {
+              fract = 1;
+            }
+            for (var m = 0; m < int; m++) {
+              colorStar += '★';
+            }
+            if (fract !== 0) {
+              colorStar += '☆';
+            }
+            for (var m = 0; m < (5 - fract - int); m++) {
+              greyStar += '☆';
+            }
+            if (info['score'] !== 5) {
+              star = '<span class="star-score">' + colorStar + '<span class="grey-star">' + greyStar + '</span></span>';
+            } else {
+              star = '<span class="star-score">' + colorStar + '</span>';
+            }
+          }
+
+          li += '<div class="work">';
+          li += '<div class="work-cover" style="background-image:url(' + coverPath + info['cover'] + ')"></div>';
+          li += '<div class="work-meta">';
+          li += '<div class="work-meta-item title">' + title + '</div>';
+          li += '<div class="work-meta-item">' + author + star + '</div>';
+          li += '<div class="work-meta-item intro">' + intro + '</div>';
+          li += '</div></div>';
+        }
+        
+        artList[j].innerHTML = li;
+      }
+    };
+    xhr.send();
+  }
+}
+</script>
+
+
+
+
+<script src="/resources/minigrid.min.js"></script>
+<script type="text/javascript">
+var album = document.querySelector(".album");
+if (album) {
+  // 相册列表 JSON 数据
+  var imgDataPath = album.getAttribute('json-src');
+  // 照片存储路径
+  var imgPath = album.getAttribute('photo-src');
+  // 最多显示数量
+  var imgMaxNum = 50;
+  // 获取窗口大小以决定图片宽度
+  var windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+  var imageWidth;
+
+  if (windowWidth < 768) {
+    imageWidth = 145; // 移动端图片宽度
+  } else {
+    imageWidth = 235;
+  }
+
+  // 生成相册
+  var linkDataPath = imgDataPath;
+  var photo = {
+    page: 1,
+    offset: imgMaxNum,
+    init: function () {
+      var that = this;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", linkDataPath, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var data = JSON.parse(xhr.responseText);
+          that.render(that.page, data);
+        }
+      };
+      xhr.send();
+    },
+    render: function (page, data) {
+      var begin = (page - 1) * this.offset;
+      var end = page * this.offset;
+      if (begin >= data.length) return;
+      var imgNameWithPattern, imgName, imageSize, imageX, imageY, li = "";
+      for (var i = begin; i < end && i < data.length; i++) {
+        imgNameWithPattern = data[i].split(' ')[1];
+        imgName = imgNameWithPattern.split('.')[0];
+        imageSize = data[i].split(' ')[0];
+        imageX = imageSize.split('.')[0];
+        imageY = imageSize.split('.')[1];
+        li += '<div class="card" style="width:' + imageWidth + 'px" >';
+        li += '<div class="album-photo" style="height:'+ imageWidth * imageY / imageX + 'px">';
+        li += '<a class="fancybox fancybox.image" href="' + imgPath + imgNameWithPattern + '" itemscope="" itemtype="http://schema.org/ImageObject" itemprop="url" data-fancybox="group" rel="group" data-caption="' + imgName + '" title="' +  imgName + '">';
+        li += '<img data-src="' + imgPath + imgNameWithPattern + '" src="' + imgPath + imgNameWithPattern + '" alt="' +  imgName + '" data-loaded="true">';
+        li += '</a>';
+        li += '</div>';
+        li += '</div>';
+      }
+      album.insertAdjacentHTML('beforeend', li);
+      this.minigrid();
+    },
+    minigrid: function () {
+      var grid = new Minigrid({
+        container: '.album',
+        item: '.card',
+        gutter: 12
+      });
+      grid.mount();
+      window.addEventListener('resize', function () {
+        grid.mount();
+      });
+    }
+  };
+  photo.init();
+}
+</script>
+</body>
+</html>

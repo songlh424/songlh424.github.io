@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"songlh424.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="MiniGUI原输入法消息接口MiniGUI在其开源版本的libminigui-1.3.3中提供了一个基于PC标准键盘输入的输入法。但是在开源版本libminigui-1.6.10以后删除了该模块，但其输入法接口依然与libminigui-1.3.3完全一致。该输入法支持标准PC键盘的汉字和英文字母输入，但是对于特殊字符和特殊键盘输入或者鼠标软键盘输入的情况，MiniGUI则不支持。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="minigui实现软键盘">
+<meta property="og:url" content="http://songlh424.github.io/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/index.html">
+<meta property="og:site_name" content="blogs">
+<meta property="og:description" content="MiniGUI原输入法消息接口MiniGUI在其开源版本的libminigui-1.3.3中提供了一个基于PC标准键盘输入的输入法。但是在开源版本libminigui-1.6.10以后删除了该模块，但其输入法接口依然与libminigui-1.3.3完全一致。该输入法支持标准PC键盘的汉字和英文字母输入，但是对于特殊字符和特殊键盘输入或者鼠标软键盘输入的情况，MiniGUI则不支持。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://songlh424.github.io/2022/11/16/img/miniGUI.jpg">
+<meta property="article:published_time" content="2022-11-16T03:27:18.000Z">
+<meta property="article:modified_time" content="2023-11-23T16:41:45.302Z">
+<meta property="article:author" content="Songlh424">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://songlh424.github.io/2022/11/16/img/miniGUI.jpg">
+
+<link rel="canonical" href="http://songlh424.github.io/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+
+
+
+<link rel="stylesheet" href="/resources/fonts/longcang/LongCang-Regular.css" >
+<link rel="stylesheet" href="/resources/fonts/lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css" >
+
+
+  <title>minigui实现软键盘 | blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://songlh424.github.io/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Songlh424">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          minigui实现软键盘
+        </h1>
+
+        <div class="post-meta" style="text-align: left;">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+
+              <time title="创建时间：2022-11-16 11:27:18" itemprop="dateCreated datePublished" datetime="2022-11-16T11:27:18+08:00">2022-11-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                <time title="修改时间：2023-11-24 00:41:45" itemprop="dateModified" datetime="2023-11-24T00:41:45+08:00">2023-11-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/miniGUI/" itemprop="url" rel="index"><span itemprop="name">miniGUI</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="MiniGUI原输入法消息接口"><a href="#MiniGUI原输入法消息接口" class="headerlink" title="MiniGUI原输入法消息接口"></a>MiniGUI原输入法消息接口</h3><p>MiniGUI在其开源版本的libminigui-1.3.3中提供了一个基于PC标准键盘输入的输入法。但是在开源版本libminigui-1.6.10以后删除了该模块，但其输入法接口依然与libminigui-1.3.3完全一致。该输入法支持标准PC键盘的汉字和英文字母输入，但是对于特殊字符和特殊键盘输入或者鼠标软键盘输入的情况，MiniGUI则不支持。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>MiniGUI的输入法是一个相对独立的模块（称为IME），它实际是一个特殊的主窗口，以顶层窗口的形式出现，并截获系统中的按键信息，经过适当的处理，将翻译之后的字符发送到当前活动窗口。MiniGUI内部提供了用来实现GB2312输入法的输入法窗口，用户也可以编写自己的定制输入法。</p>
+</blockquote>
+<p>MiniGUI-Threads为GB2312输入法定义了一个入口函数：</p>
+<p><code>HWND GBIMEWindow (HWND hosting);</code></p>
+<p>​    该函数创建一个可以拖动的GB2312输入法窗口。</p>
+<p>除了上述提供GB2312输入法的函数之外，MiniGUI提供了如下更加通用的输入法接口：</p>
+<p><code>int GUIAPI RegisterIMEWindow (HWND hWnd);</code></p>
+<p>​    该函数把指定的窗口hWnd注册为MiniGUI的IME窗口。此后，键盘输入将首先被发送到IME窗口。注意只能注册一个IME窗口。</p>
+<p><code>int GUIAPI UnregisterIMEWindow (HWND hWnd); </code></p>
+<p>​    该函数注销一个IME窗口。</p>
+<p><code>int GUIAPI SetIMEStatus (int StatusCode, int Value);</code></p>
+<p>​    该函数设置当前的IME窗口状态。</p>
+<p>对GB2312输入法，StatusCode可以是以下值之一：</p>
+<ul>
+<li><p>IS_ENABLE        使IME窗口有效或无效</p>
+</li>
+<li><p>IS_FULLCHAR   是否转换半角字符为全角字符</p>
+</li>
+<li><p>IS_FULLPUNC   是否转换半角标点为全角标点</p>
+</li>
+<li><p>IS_METHOD      输入法的种类、比如内码、全拼、五笔等等。</p>
+<p>Value为所设的状态值。</p>
+</li>
+</ul>
+<p><code>int GUIAPI GetIMEStatus (int StatusCode);</code></p>
+<p>​    该函数获取当前IME窗口的状态。StatusCode指定所要获取的内容，函数返回IME窗口状态值。</p>
+<p>为了实现desktop（消息分发和处理的主桌面窗口）和IME（输入法）窗口之间的交互，MiniGUI为输入法窗口定义了以下7个主要消息接口，当活动窗口发生变化时，MiniGUI会向IME窗口发送这些消息，实现IME的隐藏、显示和目标输出窗口句柄的更换：</p>
+<ul>
+<li><p>MSG_IME_REGISTER：向MiniGUI注册当前输入法窗口句柄；</p>
+</li>
+<li><p>MSG_IME_UNREGISTER：向MiniGUI注销当前输入法窗口句柄；</p>
+</li>
+<li><p>MSG_IME_SETTARGET：发送该消息设置输入法的目标活动窗口；</p>
+</li>
+<li><p>MSG_IME_OPEN：发送该消息告诉输入法窗口，当前活动窗口有WS_EX_IMECOMPOSE扩展风格的窗口，所以应该显示输入法窗口；</p>
+</li>
+<li><p>MSG_IME_GETTARGET：发送该消息获得当前输入法的目标活动窗口句柄；</p>
+</li>
+<li><p>MSG_IME_CLOSE：发送该消息告诉输入法窗口，当前活动窗口无WS_EX_IMECOMPOSE扩展风格，所以应该隐藏输入法窗口；</p>
+</li>
+<li><p>MSG_IME_GETSTATUS：获取当前IME窗口状态（软键盘窗口打开还是关闭的状态）。</p>
+<p>在MiniGUI的API接口中注册IME窗口句柄的函数是<code>RegisterIMEWindow</code>，它发送了IME注册的消息<code>MSG_IME_REGISTER</code>；注销IME窗口的句柄的函数是<code>UnregisterIMEWindow</code>，它发送了IME注销的消息<code>MSG_IME_UNREGISTER</code>；启动显示IME窗口的函数是<code>GBIMEWindowEx</code>，它封装了打开IME窗口的消息<code>MSG_IME_OPEN</code>和关闭IME窗口的消息<code>MSG_IME_CLOSE</code>。其它消息都在MiniGUI内部桌面消息处理中使用。</p>
+</li>
+</ul>
+<h3 id="MiniGUI原输入法消息处理流程分析"><a href="#MiniGUI原输入法消息处理流程分析" class="headerlink" title="MiniGUI原输入法消息处理流程分析"></a>MiniGUI原输入法消息处理流程分析</h3><p>在MiniGUI原输入法处理流程中，如果一个窗口要成为输入法窗口，则必须完成如下4个处理任务：</p>
+<ul>
+<li><p>注册成为当前输入法</p>
+</li>
+<li><p>处理MSG_IME_SETTARGE消息，并记录当前活动目标窗口</p>
+</li>
+<li><p>拦截MSG_CHAR消息实现特定输入法转换，并将转换结果通过MSG_CHAR消息发送到当前活动的目标窗口</p>
+</li>
+<li><p>处理输入法打开消息MSG_IME_OPEN和输入法关闭消息MSG_IME_CLOSE，再切换到需要输入法的活动窗口时自动显示输入法窗口。该主窗口将在启动之后，首先将自己注册为输入法窗口（*__mg_ime_wnd*）。这样，MiniGUI的desktop就知道首先要将按键信息发送到这个主窗口之中，而不是当前的活动主窗口。当活动主窗口发生变化时，desktop会通知输入法窗口当前的活动窗口的句柄。这样，当输入法窗口接收到按键消息并且翻译为适当的字符之后，就可以将其发送到当前的活动窗口。</p>
+<p><img src="../img/miniGUI.jpg" alt="无法显示"></p>
+<h4 id="输入法模块与编辑控件间关键消息处理"><a href="#输入法模块与编辑控件间关键消息处理" class="headerlink" title="输入法模块与编辑控件间关键消息处理"></a>输入法模块与编辑控件间关键消息处理</h4><p>增加几个消息需要在sledit控件的消息处理回调函数中使用，因为sledit这个控件是所有字符输入的基础控件。在sledit控件的鼠标左键按下MSG_LBUTTONDOWN和MSG_SETFOCUS控件聚焦两个消息的处理部分，将该控件的HWND句柄和起始坐标发送到主IME窗口，其实现代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_SETFOCUS:</span><br><span class="line">  &#123;</span><br><span class="line">	RECT rcClt = GetClientRect(hWnd, &amp;rcClt);<span class="comment">//客户区</span></span><br><span class="line">      WORD nImeLeft = rcClt.left;<span class="comment">//客户区左坐标</span></span><br><span class="line">      WORD nImeBottom = rcClt.top;<span class="comment">//客户区下坐标</span></span><br><span class="line">      ClientToScreen(hWnd, (<span class="type">int</span> *)&amp;nImeLeft, (<span class="type">int</span> *)&amp;nImeBottom);<span class="comment">//将客户区坐标转换成屏幕坐标</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETTARGET,(WPARAM)hWnd, <span class="number">0</span>);<span class="comment">//通知IME活动HWND句柄</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETSUBPOS, MAKELONG(nImeLeft, nImeBottom), <span class="number">0</span>);</span><br><span class="line">      ......(实现控件聚焦绘制);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在sledit的MSG_LBUTTONDOWN中需要判断IME窗口是关闭还是打开，然后执行反操作，使得sledit可以支持鼠标单键软键盘操作，其主要实现如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_LBUTTONDOWN:</span><br><span class="line">  &#123;</span><br><span class="line">    BOOL ImeState;</span><br><span class="line">      ImeState = (BOOL)SendMessage(__mg_ime_wnd, MSG_IME_GETSTATUS, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//获取当前IME状态</span></span><br><span class="line">      <span class="keyword">if</span>(ImeState) &#123; <span class="comment">//如果IME已经打开</span></span><br><span class="line">          SendMessage(__mg_ime_wnd, MSG_IME_CLOSE, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//关闭当前IME窗口</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          ......(通知IME窗口坐标和HWND句柄);</span><br><span class="line">          SendMessage(__mg_ime_wnd, MSG_IME_OPEN, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>同理在sledit的MSG_KILLFOCUS（失去焦点）消息处理中发送MSG_IME_SETTARGET消息，通知IME窗口当前活动窗口句柄为空，并关闭输入法。其代码实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MSG_KILLFOCUS:</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">//关闭当前IME窗口</span></span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_CLOSE, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">      SendMessage(__mg_ime_wnd, MSG_IME_SETTARGET, <span class="number">0</span>, <span class="number">0</span>);<span class="comment">//复位IME的当前目标输入窗口句柄</span></span><br><span class="line">      ......(实现控件失去焦点绘制);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>主IME窗口在收到MSG_IME_SETTARGET后从wParam中获得活动窗口的HWND句柄，采用<code>DWORD dwStyle = GetWindowStyle(wParam);</code>获取该窗口句柄的类型，然后逐一判断该dwStyle类型是否支持各子输入法，将支持的子输入法类型记录到当前活动窗口输入法类型数组，以备在GUI需要切换子输入法时使用。</p>
+<p>当创建某个支持输入法的控件时，必须把控件类型风格参数用与操作累加起来，例如一个普通编辑框的类型参数为：<code>WS_CHILD | WS_VISIBLE | INPUT_NUMBER</code>表明该输入控件仅仅支持数字型输入，其它不支持。如下是输入法类型宏定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> INPUT_NUMBER	0x000010L	<span class="comment">//数字型</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_UPPERCASE	0x000020L	<span class="comment">//大写</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INPUT_LOWERCASE	0x000040L	<span class="comment">//小写</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_SYMBOL	0x000080L	<span class="comment">//特殊字符</span></span></span><br><span class="line">  <span class="meta">#<span class="keyword">define</span> INPUT_CHINESE	0x000100L	<span class="comment">//拼音</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+
+
+
+
+
+
+<div class="license">
+  <div class="license-title">minigui实现软键盘</div>
+  <div class="license-link">
+    <a href="http://songlh424.github.io/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/">http://songlh424.github.io/2022/11/16/minigui%E5%AE%9E%E7%8E%B0%E8%BD%AF%E9%94%AE%E7%9B%98/</a>
+  </div>
+  <div class="license-meta">
+    <div class="license-meta-item">
+      <div class="license-meta-title">本文作者</div>
+      <div class="license-meta-text">
+          Songlh424
+      </div>
+    </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">发布于</div>
+        <div class="license-meta-text">
+          2022-11-16
+        </div>
+      </div>
+      <div class="license-meta-item">
+        <div class="license-meta-title">更新于</div>
+        <div class="license-meta-text">
+          2023-11-24
+        </div>
+      </div>
+    <div class="license-meta-item">
+      <div class="license-meta-title">许可协议</div>
+      <div class="license-meta-text">
+          禁止转载引用
+      </div>
+    </div>
+  </div>
+  <div class="license-statement">
+      如需转载或引用本文，请先获得作者授权！
+  </div>
+</div>
+
+
+
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/14/USB%E8%AE%BE%E5%A4%87%E7%9A%84%E9%85%8D%E7%BD%AE/" rel="prev" title="USB设备的配置">
+      <i class="fa fa-chevron-left"></i> USB设备的配置
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/18/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/" rel="next" title="从内核出发">
+      从内核出发 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#MiniGUI%E5%8E%9F%E8%BE%93%E5%85%A5%E6%B3%95%E6%B6%88%E6%81%AF%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.</span> <span class="nav-text">MiniGUI原输入法消息接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MiniGUI%E5%8E%9F%E8%BE%93%E5%85%A5%E6%B3%95%E6%B6%88%E6%81%AF%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">MiniGUI原输入法消息处理流程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E6%B3%95%E6%A8%A1%E5%9D%97%E4%B8%8E%E7%BC%96%E8%BE%91%E6%8E%A7%E4%BB%B6%E9%97%B4%E5%85%B3%E9%94%AE%E6%B6%88%E6%81%AF%E5%A4%84%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">输入法模块与编辑控件间关键消息处理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Songlh424"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Songlh424</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yourname@gmail.com" title="E-Mail → mailto:yourname@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/yourname" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Songlh424</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div><div class="footer-menu">
+    <a href="/tags/">文章标签</a> · <a href="/policy/">网站政策</a> · <a href="/links/">友情链接</a>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+
+<script type="text/javascript">
+var linkLists = document.querySelectorAll(".link-list");
+
+linkLists.forEach(function(linkList) {
+  var listPath = linkList.getAttribute('json-src');
+  var iconPath = linkList.getAttribute('icon-src');
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', listPath, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var data = JSON.parse(xhr.responseText);
+      
+      var li = "";
+      linkList.innerHTML = '';
+
+      for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+        var info = data[infoIndex];
+        var labelWarn = info['warn'] ? '<span class="label warn">' + info['warn'] + '</span>' : '';
+        var labelInfo = info['info'] ? '<span class="label info">' + info['info'] + '</span>' : '';
+
+        li += '<div class="link-list-container">';
+        li += '<img class="link-list-image" src="' + iconPath + info['logo'] + '">';
+        li += '<p>' + info['title'] + labelInfo + labelWarn + '</p>';
+        li += '<p>' + info['intro'] + '</p>';
+        li += '<a href="' + info['url'] + '" rel="noopener" target="_blank" data-pjax-state=""></a>';
+        li += '</div>';
+      }
+      
+      linkList.innerHTML = li;
+    }
+  };
+  xhr.send();
+});
+</script>
+
+
+<script type="text/javascript">
+var artList = document.querySelectorAll(".art-list");
+if (artList.length !== 0) {
+  var j = -1;
+  for (var i = 0; i < artList.length; i++) {
+    const listPath = artList[i].getAttribute('json-src');
+    const coverPath = artList[i].getAttribute('cover-src');
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', listPath, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        j++;
+        var data = JSON.parse(xhr.responseText);
+        var li = "";
+        
+        artList[j].innerHTML = '';
+
+        for (var infoIndex = 0; infoIndex < data.length; infoIndex++) {
+          var info = data[infoIndex];
+          
+          var title = info['title'];
+          if (info['pid']) {
+            title = '<a href="/posts/' + info['pid'] + '/">' + info['title'] + '</a>';
+          }
+
+          var author = info['author'] ? '<span class="author">' + info['author'] + '</span>' : '';
+
+          var intro = info['intro'] ? info['intro'] : '';
+
+          var star = '';
+          if (info['score'] == null) {
+            star = '';
+          } else {
+            var colorStar = '';
+            var greyStar = '';
+            var int = Math.floor(info['score']); //整数部分
+            var fract = 0;
+            if (info['score'] % 1 !== 0) {
+              fract = 1;
+            }
+            for (var m = 0; m < int; m++) {
+              colorStar += '★';
+            }
+            if (fract !== 0) {
+              colorStar += '☆';
+            }
+            for (var m = 0; m < (5 - fract - int); m++) {
+              greyStar += '☆';
+            }
+            if (info['score'] !== 5) {
+              star = '<span class="star-score">' + colorStar + '<span class="grey-star">' + greyStar + '</span></span>';
+            } else {
+              star = '<span class="star-score">' + colorStar + '</span>';
+            }
+          }
+
+          li += '<div class="work">';
+          li += '<div class="work-cover" style="background-image:url(' + coverPath + info['cover'] + ')"></div>';
+          li += '<div class="work-meta">';
+          li += '<div class="work-meta-item title">' + title + '</div>';
+          li += '<div class="work-meta-item">' + author + star + '</div>';
+          li += '<div class="work-meta-item intro">' + intro + '</div>';
+          li += '</div></div>';
+        }
+        
+        artList[j].innerHTML = li;
+      }
+    };
+    xhr.send();
+  }
+}
+</script>
+
+
+
+
+<script src="/resources/minigrid.min.js"></script>
+<script type="text/javascript">
+var album = document.querySelector(".album");
+if (album) {
+  // 相册列表 JSON 数据
+  var imgDataPath = album.getAttribute('json-src');
+  // 照片存储路径
+  var imgPath = album.getAttribute('photo-src');
+  // 最多显示数量
+  var imgMaxNum = 50;
+  // 获取窗口大小以决定图片宽度
+  var windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+  var imageWidth;
+
+  if (windowWidth < 768) {
+    imageWidth = 145; // 移动端图片宽度
+  } else {
+    imageWidth = 235;
+  }
+
+  // 生成相册
+  var linkDataPath = imgDataPath;
+  var photo = {
+    page: 1,
+    offset: imgMaxNum,
+    init: function () {
+      var that = this;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", linkDataPath, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var data = JSON.parse(xhr.responseText);
+          that.render(that.page, data);
+        }
+      };
+      xhr.send();
+    },
+    render: function (page, data) {
+      var begin = (page - 1) * this.offset;
+      var end = page * this.offset;
+      if (begin >= data.length) return;
+      var imgNameWithPattern, imgName, imageSize, imageX, imageY, li = "";
+      for (var i = begin; i < end && i < data.length; i++) {
+        imgNameWithPattern = data[i].split(' ')[1];
+        imgName = imgNameWithPattern.split('.')[0];
+        imageSize = data[i].split(' ')[0];
+        imageX = imageSize.split('.')[0];
+        imageY = imageSize.split('.')[1];
+        li += '<div class="card" style="width:' + imageWidth + 'px" >';
+        li += '<div class="album-photo" style="height:'+ imageWidth * imageY / imageX + 'px">';
+        li += '<a class="fancybox fancybox.image" href="' + imgPath + imgNameWithPattern + '" itemscope="" itemtype="http://schema.org/ImageObject" itemprop="url" data-fancybox="group" rel="group" data-caption="' + imgName + '" title="' +  imgName + '">';
+        li += '<img data-src="' + imgPath + imgNameWithPattern + '" src="' + imgPath + imgNameWithPattern + '" alt="' +  imgName + '" data-loaded="true">';
+        li += '</a>';
+        li += '</div>';
+        li += '</div>';
+      }
+      album.insertAdjacentHTML('beforeend', li);
+      this.minigrid();
+    },
+    minigrid: function () {
+      var grid = new Minigrid({
+        container: '.album',
+        item: '.card',
+        gutter: 12
+      });
+      grid.mount();
+      window.addEventListener('resize', function () {
+        grid.mount();
+      });
+    }
+  };
+  photo.init();
+}
+</script>
+</body>
+</html>
